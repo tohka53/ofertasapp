@@ -23,6 +23,11 @@ function newId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+/** Misma regla que la columna generada purge_at: primer dia del mes + cuatro meses. */
+export function fechaDePurga(year: number, month: number): string {
+  return new Date(Date.UTC(year, month + 3, 1)).toISOString().slice(0, 10);
+}
+
 export function defaultListName(month: number, lang: Lang = 'es'): string {
   const name = monthName(month, lang);
   return translate(lang, 'lists.defaultName', { month: lang === 'en' ? name.charAt(0).toUpperCase() + name.slice(1) : name }).trim();
@@ -54,6 +59,7 @@ export class ListsService {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private lastReloadAt = 0;
   private inFlight = 0;
+  private writeQueue: Promise<void> = Promise.resolve();
 
   readonly lists = this.listsState.asReadonly();
   readonly loading = this.loadingState.asReadonly();
@@ -140,46 +146,40 @@ export class ListsService {
       familyId: input.familyId ?? null,
       role: 'admin',
       memberCount: 1,
-      purgeAt: null,
+      purgeAt: fechaDePurga(input.year, input.month),
       items: [],
     };
     this.listsState.update((lists) => [list, ...lists]);
     void this.run(async () => {
-      const { data, error } = await this.supabase.client
-        .from('shopping_lists')
-        .insert({
-          id: list.id,
-          name: list.name,
-          month: list.month,
-          year: list.year,
-          country_code: list.countryCode,
-          currency: list.currency,
-          currency_symbol: list.currencySymbol,
-          owner_id: userId,
-          family_id: list.familyId,
-        })
-        .select('purge_at')
-        .single();
+      const { error } = await this.supabase.client.from('shopping_lists').insert({
+        id: list.id,
+        name: list.name,
+        month: list.month,
+        year: list.year,
+        country_code: list.countryCode,
+        currency: list.currency,
+        currency_symbol: list.currencySymbol,
+        owner_id: userId,
+        family_id: list.familyId,
+      });
       if (error) throw error;
-      const purgeAt = (data as { purge_at: string }).purge_at;
-      this.patch(list.id, (l) => ({ ...l, purgeAt }));
     });
     return list;
   }
 
   update(listId: string, changes: Partial<Pick<ShoppingList, 'name' | 'month' | 'year' | 'familyId'>>): void {
-    this.patch(listId, (list) => ({ ...list, ...changes, name: (changes.name ?? list.name).trim() || list.name }));
+    this.patch(listId, (list) => {
+      const next = { ...list, ...changes, name: (changes.name ?? list.name).trim() || list.name };
+      return { ...next, purgeAt: fechaDePurga(next.year, next.month) };
+    });
     const list = this.get(listId);
     if (!list) return;
     void this.run(async () => {
-      const { data, error } = await this.supabase.client
+      const { error } = await this.supabase.client
         .from('shopping_lists')
         .update({ name: list.name, month: list.month, year: list.year, family_id: list.familyId })
-        .eq('id', listId)
-        .select('purge_at')
-        .single();
+        .eq('id', listId);
       if (error) throw error;
-      this.patch(listId, (l) => ({ ...l, purgeAt: (data as { purge_at: string }).purge_at }));
     });
   }
 
@@ -327,16 +327,24 @@ export class ListsService {
     });
   }
 
-  private async run(action: () => Promise<void>): Promise<void> {
+  /**
+   * Las escrituras se encadenan: la lista tiene que existir en la base antes de
+   * que llegue el primer articulo, y dos peticiones sueltas no garantizan orden.
+   */
+  private run(action: () => Promise<void>): Promise<void> {
     this.inFlight += 1;
-    try {
-      await action();
-    } catch {
-      this.notify.error(this.i18n.t('data.saveError'));
-      await this.reload();
-    } finally {
-      this.inFlight -= 1;
-    }
+    const next = this.writeQueue.then(async () => {
+      try {
+        await action();
+      } catch {
+        this.notify.error(this.i18n.t('data.saveError'));
+        await this.reload();
+      } finally {
+        this.inFlight -= 1;
+      }
+    });
+    this.writeQueue = next;
+    return next;
   }
 
   private subscribe(userId: string): void {
