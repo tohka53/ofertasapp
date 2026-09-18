@@ -1,0 +1,61 @@
+<div class="shell" [class.handset]="isHandset()">
+  <header class="header">
+    <mat-toolbar class="toolbar">
+      <a class="brand" routerLink="/buscar" [attr.aria-label]="'shell.home' | t">
+        <mat-icon aria-hidden="true">savings</mat-icon>
+        @if (!isHandset()) {
+          <span>{{ 'app.name' | t }}</span>
+        }
+      </a>
+      @if (!isHandset()) {
+        <nav class="top-nav" [attr.aria-label]="'nav.main' | t">
+          @for (item of nav; track item.path) {
+            <a mat-button [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              {{ item.label | t }}
+            </a>
+          }
+        </nav>
+      }
+      <span class="ca-spacer"></span>
+      @if (preferences.country(); as country) {
+        <a class="country" routerLink="/perfil" [attr.aria-label]="'shell.countryAria' | t: { country: (country.name | loc) }">
+          <span aria-hidden="true">{{ country.flag }}</span>
+          @if (!isHandset()) {
+            <span>
+              {{ 'shell.countryStores' | t: { country: (country.name | loc), count: preferences.selectedStoreIds().length } }}{{ preferences.stateCode() ? ' · ' + preferences.stateCode() : '' }}
+            </span>
+          }
+        </a>
+      }
+      <app-language-switch />
+      <button mat-icon-button type="button" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'shell.userMenu' | t">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="menu-user" mat-menu-item disabled>
+          <span>{{ user()?.name }}<br /><small>{{ user()?.email }}</small></span>
+        </div>
+        <a mat-menu-item routerLink="/perfil"><mat-icon>person</mat-icon>{{ 'nav.profile' | t }}</a>
+        <a mat-menu-item routerLink="/grupos"><mat-icon>diversity_3</mat-icon>{{ 'nav.families' | t }}</a>
+        <button mat-menu-item type="button" (click)="logout()"><mat-icon>logout</mat-icon>{{ 'shell.logout' | t }}</button>
+      </mat-menu>
+    </mat-toolbar>
+    <app-invitations-banner />
+  </header>
+
+  <main class="main" id="contenido">
+    <router-outlet />
+  </main>
+
+  @if (isHandset()) {
+    <nav class="bottom-nav" [attr.aria-label]="'nav.main' | t">
+      @for (item of nav; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+          <span>{{ item.short | t }}</span>
+        </a>
+      }
+    </nav>
+  }
+</div>

@@ -1,0 +1,79 @@
+<h2 mat-dialog-title>{{ 'best.title' | t }}</h2>
+<mat-dialog-content class="content">
+  @if (item(); as current) {
+    <div class="ca-row step">
+      <span class="ca-tag info">{{ 'best.step' | t: { index: index() + 1, total: data.itemIds.length } }}</span>
+      <strong>{{ current.productQuery }}</strong>
+      <span class="ca-muted">· {{ current.desiredPresentation || ('best.noDesired' | t) }} · {{ 'best.quantity' | t: { count: current.quantity } }}</span>
+    </div>
+
+    @if (preferences.queryableStoreIds().length === 0) {
+      <div class="ca-notice info"><mat-icon aria-hidden="true">travel_explore</mat-icon><span>{{ 'best.noQueryable' | t }}</span></div>
+    }
+
+    @if (loading()) {
+      <div class="loading" role="status">
+        <mat-progress-bar mode="indeterminate" />
+        <span class="ca-small">{{ 'best.loading' | t }}</span>
+      </div>
+    }
+    @if (error(); as message) {
+      <div class="ca-notice error" role="alert"><mat-icon aria-hidden="true">error</mat-icon><span>{{ message | msg }}</span></div>
+    }
+
+    @if (response(); as result) {
+      <app-store-query-status [stores]="result.stores" />
+      @if (options().length === 0) {
+        <app-empty-state icon="search_off" [title]="'best.noOptionsTitle' | t" [message]="'best.noOptionsMessage' | t" />
+      } @else {
+        @if (current.desiredPresentation && !hasDesired()) {
+          <p class="ca-small ca-muted">{{ 'best.desiredNotParsed' | t: { value: current.desiredPresentation } }}</p>
+        }
+        <mat-radio-group class="options" [value]="selectedOfferId()" (change)="selectedOfferId.set($event.value)" [attr.aria-label]="'best.options' | t">
+          @for (row of options(); track row.offer.id) {
+            <label class="option" [class.selected]="selectedOfferId() === row.offer.id" [class.disabled]="row.offer.price === null">
+              <mat-radio-button [value]="row.offer.id" [disabled]="row.offer.price === null" />
+              <span class="info">
+                <strong>{{ row.offer.name }}</strong>
+                <span class="ca-small">{{ row.offer.storeName }} · {{ row.offer | presentation | orNA }}</span>
+                <span class="ca-row tags">
+                  @if (row.matchesDesired) {
+                    <app-status-tag [label]="'best.matches' | t" tone="ok" />
+                  }
+                  @if (row.isBestComparable) {
+                    <app-status-tag [label]="'card.best' | t" tone="best" />
+                  }
+                  @if (row.offer.availability === 'unavailable') {
+                    <app-status-tag [label]="'card.unavailable' | t" tone="error" />
+                  }
+                </span>
+                @if (row.offer.promotions.length) {
+                  <app-promotion-list [promotions]="row.offer.promotions" [currency]="row.offer.currency" [storeName]="row.offer.storeName" />
+                }
+              </span>
+              <span class="price">
+                <strong>{{ row.offer.price | money: row.offer.currency : 'common.priceNotAvailable' }}</strong>
+                <span class="ca-small">{{ row.offer.unitPrice | unitPrice: row.offer.currency }}</span>
+                @if (row.offer.price !== null) {
+                  <span class="ca-small ca-muted">{{ 'best.subtotal' | t: { quantity: current.quantity, amount: (row.offer.price * current.quantity | money: row.offer.currency) } }}</span>
+                }
+                <a class="ca-small" [href]="row.offer.url" target="_blank" rel="noopener noreferrer">{{ 'common.viewInStore' | t }}</a>
+              </span>
+            </label>
+          }
+        </mat-radio-group>
+      }
+    }
+  } @else {
+    <app-empty-state icon="task_alt" [title]="'best.noItems' | t" />
+  }
+</mat-dialog-content>
+<mat-dialog-actions class="actions">
+  <span class="ca-small ca-muted">{{ 'best.assigned' | t: { count: assigned() } }}</span>
+  <span class="ca-spacer"></span>
+  <button mat-button type="button" (click)="finish()">{{ 'best.finish' | t }}</button>
+  @if (item()) {
+    <button mat-stroked-button type="button" (click)="next()">{{ (isLast() ? 'best.skipFinish' : 'best.skip') | t }}</button>
+    <button mat-flat-button type="button" (click)="choose()" [disabled]="!selectedOfferId()">{{ (isLast() ? 'best.chooseFinish' : 'best.choose') | t }}</button>
+  }
+</mat-dialog-actions>

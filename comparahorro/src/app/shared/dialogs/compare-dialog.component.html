@@ -1,0 +1,111 @@
+<h2 mat-dialog-title>{{ 'compare.title' | t }}</h2>
+<mat-dialog-content class="content">
+  <div class="ca-surface target">
+    <strong>{{ data.offer.name }}</strong>
+    <span class="ca-small ca-muted">
+      {{ data.offer.brand | orNA }} · {{ data.offer | presentation | orNA }} · {{ 'compare.barcode' | t: { code: (data.offer.gtinRaw | orNA) } }}
+    </span>
+  </div>
+
+  @let g = group();
+  @if (g && g.canCompare) {
+    <section>
+      <h3 class="ca-section-title">
+        <mat-icon aria-hidden="true">{{ g.matchType === 'gtin' ? 'qr_code_2' : 'help_outline' }}</mat-icon>
+        {{ (g.matchType === 'gtin' ? 'compare.sameProduct' : 'compare.possibleSame') | t }}
+      </h3>
+      <p class="ca-small ca-muted">{{ (g.matchType === 'gtin' ? 'compare.gtinExplain' : 'compare.probableExplain') | t }}</p>
+      @if (g.contentMismatch) {
+        <div class="ca-notice warn">
+          <mat-icon aria-hidden="true">warning</mat-icon>
+          <span>{{ 'compare.contentMismatch' | t }}</span>
+        </div>
+      }
+      <ul class="rows">
+        @for (offer of g.offers; track offer.id) {
+          <li class="row" [class.best]="g.bestOfferIds.includes(offer.id)">
+            <div class="row-main">
+              <strong>{{ offer.storeName }}</strong>
+              @if (g.bestOfferIds.includes(offer.id)) {
+                <app-status-tag [label]="'card.best' | t" tone="best" icon="savings" />
+              }
+              <span class="ca-small ca-muted">{{ offer.name }} · {{ offer | presentation | orNA }}</span>
+              <app-promotion-list [promotions]="offer.promotions" [currency]="offer.currency" [storeName]="offer.storeName" />
+            </div>
+            <div class="row-price">
+              <span class="price">{{ offer.price | money: offer.currency : 'common.priceNotAvailable' }}</span>
+              <span class="ca-small">{{ offer.unitPrice | unitPrice: offer.currency }}</span>
+              <span class="ca-small ca-muted">{{ (offer.availability === 'available' ? 'card.available' : offer.availability === 'unavailable' ? 'card.unavailable' : 'card.availabilityUnknown') | t }}</span>
+              <span class="ca-small ca-muted">{{ offer.consultedAt | dateTime }}</span>
+              <div class="row-actions">
+                <a mat-button [href]="offer.url" target="_blank" rel="noopener noreferrer">{{ 'common.viewInStore' | t }}</a>
+                <button mat-stroked-button type="button" (click)="addToList(offer)">{{ 'common.add' | t }}</button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  } @else {
+    <div class="ca-notice info">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <span>{{ 'compare.notEnough' | t }}</span>
+    </div>
+  }
+
+  @if (data.offer.gtin && !gtinSearch()) {
+    <div class="ca-row gtin">
+      <button mat-stroked-button type="button" (click)="searchByGtin()" [disabled]="searching()">
+        <mat-icon>qr_code_scanner</mat-icon>
+        {{ 'compare.searchGtin' | t }}
+      </button>
+      @if (searching()) {
+        <mat-spinner diameter="24" />
+      }
+    </div>
+  }
+  @if (gtinError(); as error) {
+    <div class="ca-notice error"><mat-icon aria-hidden="true">error</mat-icon><span>{{ error | msg }}</span></div>
+  }
+  @if (gtinSearch(); as result) {
+    <app-store-query-status [stores]="result.stores" />
+  }
+
+  @if (alternatives().length) {
+    <section>
+      <h3 class="ca-section-title">
+        <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+        {{ 'compare.alternatives' | t: { unit: (unit() | unitName) } }}
+      </h3>
+      <p class="ca-small ca-muted">{{ 'compare.alternativesExplain' | t: { unit: (unit() | unitName) } }}</p>
+      <ul class="rows">
+        @for (offer of [data.offer].concat(alternatives()); track offer.id) {
+          <li class="row">
+            <div class="row-main">
+              <strong>{{ offer.name }}</strong>
+              <span class="ca-small ca-muted">{{ offer.storeName }} · {{ offer | presentation | orNA }}</span>
+              <div class="ca-row">
+                @if (offer.id === data.offer.id) {
+                  <app-status-tag [label]="'compare.chosen' | t" tone="info" />
+                }
+                @if (offer.id === cheapestPackageId()) {
+                  <app-status-tag [label]="'search.cheapestPackage' | t" tone="ok" />
+                }
+                @if (offer.id === cheapestUnitId()) {
+                  <app-status-tag [label]="'search.cheapestUnit' | t: { unit: (unit() | unitName) }" tone="ok" />
+                }
+              </div>
+            </div>
+            <div class="row-price">
+              <span class="price">{{ offer.price | money: offer.currency : 'common.priceNotAvailable' }}</span>
+              <span class="ca-small">{{ offer.unitPrice | unitPrice: offer.currency }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-flat-button type="button" mat-dialog-close>{{ 'common.close' | t }}</button>
+</mat-dialog-actions>

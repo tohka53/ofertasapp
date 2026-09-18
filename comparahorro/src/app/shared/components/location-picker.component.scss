@@ -1,0 +1,38 @@
+:host {
+  display: grid;
+  gap: 12px;
+}
+
+.modes {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0 12px;
+}
+
+.gps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.actions {
+  gap: 8px;
+}
+
+.resolution {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font: var(--mat-sys-body-small);
+}
+
+.warn {
+  color: var(--ca-warning);
+}

@@ -1,0 +1,82 @@
+<mat-card appearance="outlined" class="offer" [class.best]="isBest()">
+  <div class="tags">
+    <app-status-tag [label]="offer().storeName" tone="info" icon="storefront" />
+    <app-status-tag [label]="availabilityKey() | t" [tone]="availabilityTone()" />
+    @if (isBest()) {
+      <app-status-tag [label]="'card.best' | t" tone="best" icon="savings" />
+    }
+  </div>
+
+  <div class="body">
+    <div class="thumb">
+      @if (offer().imageUrl) {
+        <img [src]="offer().imageUrl" [alt]="offer().name" loading="lazy" referrerpolicy="no-referrer" />
+      } @else {
+        <mat-icon aria-hidden="true">image_not_supported</mat-icon>
+      }
+    </div>
+    <div class="info">
+      <h3 class="name">{{ offer().name }}</h3>
+      <div class="price">
+        @if (offer().price !== null) {
+          <span class="ca-price">{{ offer().price | money: offer().currency }}</span>
+        } @else {
+          <span class="ca-price-missing">{{ 'common.priceNotAvailable' | t }}</span>
+        }
+        @if (offer().listPrice !== null) {
+          <span class="ca-strike ca-small">{{ 'card.was' | t: { price: (offer().listPrice | money: offer().currency) } }}</span>
+        }
+      </div>
+      <div class="ca-small">{{ 'card.unitPrice' | t: { value: (offer().unitPrice | unitPrice: offer().currency) } }}</div>
+    </div>
+  </div>
+
+  @if (extraPromotions().length) {
+    <app-promotion-list class="promos" [promotions]="extraPromotions()" [currency]="offer().currency" [storeName]="offer().storeName" />
+  }
+
+  @if (groupKey(); as key) {
+    <button type="button" class="group-link" (click)="compare.emit(offer())">
+      <mat-icon aria-hidden="true">{{ group()?.matchType === 'gtin' ? 'qr_code_2' : 'help_outline' }}</mat-icon>
+      {{ key | t: { count: group()?.storeIds?.length ?? 0 } }} · {{ 'card.viewComparison' | t }}
+    </button>
+  }
+
+  <dl class="ca-dl meta">
+    <dt>{{ 'card.brand' | t }}</dt>
+    <dd>{{ offer().brand | orNA }}</dd>
+    <dt>{{ 'card.variant' | t }}</dt>
+    <dd>{{ offer().variant | orNA }}</dd>
+    <dt>{{ 'card.presentation' | t }}</dt>
+    <dd>{{ offer() | presentation | orNA }}</dd>
+    <dt>{{ 'card.branch' | t }}</dt>
+    <dd>
+      @if (offer().location.assignedStore) {
+        {{ offer().location.assignedStore }}{{ offer().location.label ? ' · ' + offer().location.label : '' }}
+      } @else if (offer().location.label) {
+        {{ 'card.noBranch' | t: { label: offer().location.label } }}
+      } @else {
+        {{ 'common.notAvailable' | t }}
+      }
+    </dd>
+    <dt>{{ 'card.consulted' | t }}</dt>
+    <dd>{{ offer().consultedAt | dateTime }}</dd>
+  </dl>
+
+  @if (showActions()) {
+    <div class="actions">
+      <a mat-button [href]="offer().url" target="_blank" rel="noopener noreferrer">
+        <mat-icon>open_in_new</mat-icon>
+        {{ 'common.viewInStore' | t }}
+      </a>
+      <button mat-button type="button" (click)="compare.emit(offer())">
+        <mat-icon>compare_arrows</mat-icon>
+        {{ 'card.compare' | t }}
+      </button>
+      <button mat-flat-button type="button" class="add" (click)="addToList.emit(offer())">
+        <mat-icon>playlist_add</mat-icon>
+        {{ 'card.addToList' | t }}
+      </button>
+    </div>
+  }
+</mat-card>

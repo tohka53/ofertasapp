@@ -1,0 +1,159 @@
+.back {
+  margin-left: -8px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 8px 16px;
+  margin: 12px 0;
+
+  .total-main,
+  .total-side {
+    display: grid;
+    gap: 2px;
+  }
+
+  .note {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+}
+
+.warn {
+  color: var(--ca-warning);
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 8px 12px;
+  align-items: center;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  padding: 8px 12px;
+  background: var(--mat-sys-surface);
+
+  &.pending {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    border-style: dashed;
+  }
+
+  &.purchased .name {
+    text-decoration: line-through;
+    color: var(--ca-muted);
+  }
+}
+
+.item-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.qty {
+  display: inline-flex;
+  align-items: center;
+}
+
+.qty-input {
+  width: 56px;
+  text-align: center;
+  font: var(--mat-sys-body-large);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 8px;
+  padding: 6px 4px;
+  background: var(--mat-sys-surface);
+  color: inherit;
+}
+
+.line-total {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.store-title .subtotal {
+  font: var(--mat-sys-title-small);
+}
+
+.conditions {
+  margin-bottom: 8px;
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+}
+
+@media (max-width: 719.98px) {
+  .item {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    .qty,
+    .line-total {
+      grid-column: 2;
+      justify-items: start;
+    }
+
+    &.pending {
+      grid-template-columns: minmax(0, 1fr);
+
+      .qty,
+      .item-actions {
+        grid-column: 1;
+        justify-content: flex-start;
+      }
+    }
+  }
+
+  .line-total .item-actions {
+    justify-content: flex-start;
+  }
+}
+
+.manual-count {
+  color: var(--ca-warning);
+}
+
+.item.manual {
+  border-style: dashed;
+  border-color: var(--ca-warning);
+}
+
+.sharing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}

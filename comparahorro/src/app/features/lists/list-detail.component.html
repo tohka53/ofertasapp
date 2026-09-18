@@ -1,0 +1,194 @@
+<div class="ca-page">
+  <a mat-button routerLink="/listas" class="back"><mat-icon>arrow_back</mat-icon> {{ 'nav.lists' | t }}</a>
+
+  @if (list(); as l) {
+    @let s = summary()!;
+    <header class="header">
+      <div>
+        <h1 class="ca-page-title">{{ l.name }}</h1>
+        <p class="ca-page-subtitle">{{ 'detail.subtitle' | t: { month: (l.month | monthName), year: l.year, currency: l.currency, items: s.itemCount } }}</p>
+      </div>
+      @if (editable()) {
+        <div class="ca-actions">
+          <button mat-stroked-button type="button" (click)="addItem()"><mat-icon>add</mat-icon> {{ 'detail.addItem' | t }}</button>
+          <button mat-flat-button type="button" (click)="findBestPrices()"><mat-icon>price_check</mat-icon> {{ 'detail.findBest' | t }}</button>
+          <button mat-stroked-button type="button" (click)="refreshPrices()"><mat-icon>refresh</mat-icon> {{ 'detail.refresh' | t }}</button>
+          <button mat-stroked-button type="button" (click)="openMembers()"><mat-icon>group</mat-icon> {{ 'detail.share' | t }}</button>
+          <button mat-icon-button type="button" [matMenuTriggerFor]="more" [attr.aria-label]="'detail.more' | t"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #more="matMenu">
+            @if (l.role === 'admin') {
+              <button mat-menu-item type="button" (click)="editList()"><mat-icon>edit</mat-icon>{{ 'detail.edit' | t }}</button>
+              <button mat-menu-item type="button" (click)="deleteList()"><mat-icon>delete</mat-icon>{{ 'detail.delete' | t }}</button>
+            } @else {
+              <button mat-menu-item type="button" (click)="leaveList()"><mat-icon>logout</mat-icon>{{ 'detail.leave' | t }}</button>
+            }
+          </mat-menu>
+        </div>
+      }
+    </header>
+
+    <p class="ca-small ca-muted sharing">
+      <mat-icon aria-hidden="true">{{ l.memberCount > 1 ? 'groups' : 'person' }}</mat-icon>
+      {{ 'detail.sharedWith' | t: { count: l.memberCount } }}
+      @if (familyName(); as family) {
+        · {{ 'detail.inFamily' | t: { name: family } }}
+      }
+      @if (l.purgeAt) {
+        · {{ 'detail.purgeAt' | t: { date: (l.purgeAt | calendarDate) } }}
+      }
+    </p>
+
+    @if (!editable()) {
+      <div class="ca-notice warn">
+        <mat-icon aria-hidden="true">public</mat-icon>
+        <span>{{ 'detail.otherCountry' | t: { country: l.countryCode, currency: l.currency } }}</span>
+      </div>
+    }
+
+    <section class="totals ca-surface" [attr.aria-label]="'detail.totals' | t">
+      <div class="total-main">
+        <span class="ca-small ca-muted">{{ 'detail.totalLabel' | t }}</span>
+        <strong class="ca-price" data-testid="list-total">{{ s.totalCents | cents: l.currency }}</strong>
+      </div>
+      <div class="total-side">
+        <span>{{ 'detail.remaining' | t }} <strong data-testid="list-remaining">{{ s.remainingCents | cents: l.currency }}</strong></span>
+        <span>{{ 'detail.quotedPurchased' | t: { quoted: s.quotedCount, purchased: s.purchasedCount } }}</span>
+        @if (s.pendingItems.length) {
+          <span class="warn">{{ 'detail.pendingNotCounted' | t: { count: s.pendingItems.length } }}</span>
+        }
+        @if (s.unpricedItems.length) {
+          <span class="warn">{{ 'detail.unpricedNotCounted' | t: { count: s.unpricedItems.length } }}</span>
+        }
+        @if (s.manualCount) {
+          <span class="manual-count">{{ 'detail.manualCount' | t: { count: s.manualCount } }}</span>
+        }
+      </div>
+      <p class="ca-small ca-muted note">{{ 'detail.totalNote' | t }}</p>
+    </section>
+
+    @if (s.itemCount === 0) {
+      <app-empty-state icon="playlist_add" [title]="'detail.emptyTitle' | t" [message]="'detail.emptyMessage' | t">
+        @if (editable()) {
+          <button mat-flat-button type="button" (click)="addItem()">{{ 'detail.addItem' | t }}</button>
+          <a mat-stroked-button routerLink="/buscar">{{ 'detail.goToSearch' | t }}</a>
+        }
+      </app-empty-state>
+    }
+
+    @if (s.pendingItems.length) {
+      <section aria-labelledby="pendientes">
+        <h2 id="pendientes" class="ca-section-title"><mat-icon aria-hidden="true">pending_actions</mat-icon>{{ 'detail.pendingTitle' | t: { count: s.pendingItems.length } }}</h2>
+        <ul class="items">
+          @for (item of s.pendingItems; track item.id) {
+            <li class="item pending">
+              <div class="item-main">
+                <strong>{{ item.productQuery }}</strong>
+                <span class="ca-small ca-muted">{{ 'detail.desired' | t: { value: (item.desiredPresentation | orNA: 'common.notSpecified') } }}</span>
+                <span class="ca-small">{{ 'detail.pendingPrice' | t }}</span>
+              </div>
+              <div class="qty">
+                <button mat-icon-button type="button" (click)="step(item, -1)" [disabled]="!editable() || item.quantity <= 1" [attr.aria-label]="'detail.minus' | t"><mat-icon>remove</mat-icon></button>
+                <input class="qty-input" type="number" min="1" max="999" [value]="item.quantity" (change)="setQuantity(item, $any($event.target).value)" [disabled]="!editable()" [attr.aria-label]="'detail.quantity' | t" />
+                <button mat-icon-button type="button" (click)="step(item, 1)" [disabled]="!editable()" [attr.aria-label]="'detail.plus' | t"><mat-icon>add</mat-icon></button>
+              </div>
+              @if (editable()) {
+                <div class="item-actions">
+                  <button mat-button type="button" (click)="findBestPrices([item.id])"><mat-icon>price_check</mat-icon> {{ 'detail.findPrice' | t }}</button>
+                  <button mat-button type="button" (click)="notePrice(item)"><mat-icon>edit_note</mat-icon> {{ 'detail.notePrice' | t }}</button>
+                  <button mat-icon-button type="button" (click)="removeItem(item)" [attr.aria-label]="'detail.removeItem' | t"><mat-icon>delete</mat-icon></button>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @for (group of s.storeGroups; track group.storeId) {
+      <section class="store-group" [attr.aria-label]="group.storeName">
+        <h2 class="ca-section-title store-title">
+          <mat-icon aria-hidden="true">storefront</mat-icon>
+          {{ group.storeName }}
+          <span class="ca-spacer"></span>
+          <span class="subtotal">{{ 'detail.subtotal' | t: { amount: (group.subtotalCents | cents: l.currency) } }}</span>
+        </h2>
+        @if (conditions(group.storeId).length || storeNotes(group.storeId).length) {
+          <div class="ca-notice conditions">
+            <mat-icon aria-hidden="true">local_shipping</mat-icon>
+            <div>
+              <strong>{{ 'detail.conditionsTitle' | t }}</strong>
+              <ul>
+                @for (c of conditions(group.storeId); track $index) {
+                  <li>
+                    {{ c.label | loc }} · <a [href]="c.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'common.source' | t }}</a> ({{ c.verifiedAt }})
+                  </li>
+                }
+                @for (note of storeNotes(group.storeId); track $index) {
+                  <li>{{ note | loc }}</li>
+                }
+              </ul>
+            </div>
+          </div>
+        }
+        <ul class="items">
+          @for (item of group.items; track item.id) {
+            @let offer = item.offer!;
+            <li class="item" [class.purchased]="item.purchased" [class.manual]="offer.source === 'manual'">
+              <mat-checkbox [checked]="item.purchased" (change)="togglePurchased(item, $event.checked)" [disabled]="!editable()" [attr.aria-label]="'detail.purchasedAria' | t: { name: offer.name }" />
+              <div class="item-main">
+                <strong class="name">{{ offer.name }}</strong>
+                @if (offer.source === 'manual') {
+                  <span class="ca-row"><app-status-tag [label]="'detail.manualTag' | t" tone="warn" icon="edit_note" /></span>
+                }
+                <span class="ca-small ca-muted">{{ offer | presentation | orNA }} · {{ offer.brand | orNA }}</span>
+                <span class="ca-small">{{ 'detail.packagePrice' | t: { price: (offer.price | money: offer.currency), unit: (offer.unitPrice | unitPrice: offer.currency) } }}</span>
+                @if (offer.promotions.length) {
+                  <app-promotion-list [promotions]="offer.promotions" [currency]="offer.currency" [storeName]="offer.storeName" />
+                }
+                <span class="ca-small ca-muted">
+                  @if (offer.source === 'manual') {
+                    {{ 'detail.manualSeen' | t: { date: (offer.consultedAt | calendarDate) } }}
+                    @if (offer.url) {
+                      · <a [href]="offer.url" target="_blank" rel="noopener noreferrer">{{ 'detail.openStore' | t }}</a>
+                    }
+                  } @else {
+                    {{ 'detail.consulted' | t: { date: (offer.consultedAt | dateTime) } }}
+                    @if (offer.assignedStore) {
+                      {{ 'detail.branch' | t: { branch: offer.assignedStore } }}
+                    }
+                    · <a [href]="offer.url" target="_blank" rel="noopener noreferrer">{{ 'common.viewInStore' | t }}</a>
+                  }
+                </span>
+              </div>
+              <div class="qty">
+                <button mat-icon-button type="button" (click)="step(item, -1)" [disabled]="!editable() || item.quantity <= 1" [attr.aria-label]="'detail.minus' | t"><mat-icon>remove</mat-icon></button>
+                <input class="qty-input" type="number" min="1" max="999" [value]="item.quantity" (change)="setQuantity(item, $any($event.target).value)" [disabled]="!editable()" [attr.aria-label]="'detail.quantity' | t" />
+                <button mat-icon-button type="button" (click)="step(item, 1)" [disabled]="!editable()" [attr.aria-label]="'detail.plus' | t"><mat-icon>add</mat-icon></button>
+              </div>
+              <div class="line-total">
+                @let line = subtotal(item);
+                @if (line !== null) {
+                  <strong data-testid="line-subtotal">{{ line | cents: offer.currency }}</strong>
+                } @else {
+                  <span class="warn">{{ 'detail.lineUnavailable' | t }}</span>
+                }
+                @if (editable()) {
+                  <div class="item-actions">
+                    <button mat-button type="button" (click)="offer.source === 'manual' ? notePrice(item) : findBestPrices([item.id])">
+                      {{ (offer.source === 'manual' ? 'detail.notePrice' : 'detail.changeOffer') | t }}
+                    </button>
+                    <button mat-icon-button type="button" (click)="removeItem(item)" [attr.aria-label]="'detail.removeItem' | t"><mat-icon>delete</mat-icon></button>
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  } @else {
+    <app-empty-state icon="search_off" [title]="'detail.notFoundTitle' | t" [message]="'detail.notFoundMessage' | t">
+      <a mat-flat-button routerLink="/listas">{{ 'detail.viewLists' | t }}</a>
+    </app-empty-state>
+  }
+</div>

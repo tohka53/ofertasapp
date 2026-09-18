@@ -1,0 +1,123 @@
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+    <mat-label>{{ 'selector.filter' | t }}</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [value]="filter()" (input)="filter.set($any($event.target).value)" autocomplete="off" />
+    @if (filter()) {
+      <button mat-icon-button matSuffix type="button" [attr.aria-label]="'selector.clearFilter' | t" (click)="filter.set('')">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+  <div class="ca-row">
+    <button mat-stroked-button type="button" (click)="selectAllAvailable()" [disabled]="quickIds().length === 0 || allQuickSelected()">
+      <mat-icon>done_all</mat-icon>
+      {{ 'selector.selectAll' | t }}
+    </button>
+    @if (selected().length) {
+      <button mat-button type="button" (click)="clear()">{{ 'selector.clear' | t }}</button>
+    }
+  </div>
+</div>
+
+<p class="ca-small ca-muted count">
+  {{ 'selector.count' | t: { selected: selected().length, queryable: availableIds().length, links: linkIds().length, total: stores().length } }}
+</p>
+
+@if (visibleStores().length === 0) {
+  <app-empty-state icon="storefront" [title]="'selector.noMatchTitle' | t" [message]="'selector.noMatchMessage' | t: { term: filter() }" />
+}
+
+<ul class="stores">
+  @for (store of visibleStores(); track store.id) {
+    @let view = status(store);
+    <li class="store" [class.disabled]="!store.selectable" [class.checked]="isSelected(store)">
+      <mat-checkbox [checked]="isSelected(store)" [disabled]="!store.selectable" (change)="toggle(store, $event.checked)" [attr.data-store]="store.id">
+        <span class="store-name">{{ store.name }}</span>
+      </mat-checkbox>
+      <div class="store-info">
+        <div class="ca-row">
+          <app-status-tag [label]="view.key | t" [tone]="view.tone" [icon]="view.icon" [tooltip]="store.statusMessage | msg" />
+          @if (reasonKey(store); as reason) {
+            <app-status-tag [label]="reason | t" tone="neutral" />
+          }
+          @if (store.location.priceVariesByLocation) {
+            <app-status-tag [label]="'selector.priceByLocation' | t" tone="warn" icon="location_on" />
+          } @else if (store.location.availabilityRequiresLocation) {
+            <app-status-tag [label]="'selector.stockByLocation' | t" tone="warn" icon="location_on" />
+          }
+          <span class="ca-small ca-muted">{{ store.platform | loc }}</span>
+        </div>
+        @if (store.status === 'offline') {
+          <div class="ca-notice error">
+            <mat-icon aria-hidden="true">cloud_off</mat-icon>
+            <span>
+              @if (store.statusMessage) {
+                {{ 'selector.offlineNotice' | t: { detail: (store.statusMessage | msg) } }}
+              } @else {
+                {{ 'selector.offlineNoticeNoDetail' | t }}
+              }
+            </span>
+          </div>
+        }
+        <mat-expansion-panel class="more">
+          <mat-expansion-panel-header>
+            <mat-panel-title class="ca-small">{{ panelKey(store) | t }}</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="ca-small details">
+            @if (store.queryable) {
+              <p>{{ store.mechanism | loc }}</p>
+              @if (store.location.note) {
+                <p>{{ store.location.note | loc }}</p>
+              }
+            } @else {
+              @if (store.integrationKind === 'link') {
+                <p>{{ 'selector.linkExplain' | t }}</p>
+              }
+              @if (store.mechanism) {
+                <p>{{ store.mechanism | loc }}</p>
+              }
+              <p>{{ store.pendingReason | loc }}</p>
+              @if (store.howToEnable) {
+                <p><strong>{{ 'selector.toEnable' | t }}</strong> {{ store.howToEnable | loc }}</p>
+              }
+              @for (item of store.evidence; track $index) {
+                <p class="ca-muted">{{ item | loc }}</p>
+              }
+            }
+            @if (store.banners.length) {
+              <p>{{ 'selector.banners' | t: { names: bannerNames(store) } }}</p>
+            }
+            @if (store.operator) {
+              <p>{{ 'selector.operator' | t: { name: store.operator } }}</p>
+            }
+            @for (condition of store.knownConditions; track $index) {
+              <p>
+                {{ condition.label | loc }} ·
+                <a [href]="condition.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'common.source' | t }}</a>
+                ({{ 'common.verifiedOn' | t: { date: condition.verifiedAt } }})
+              </p>
+            }
+            @for (note of store.notes; track $index) {
+              <p>{{ note | loc }}</p>
+            }
+            <p>
+              @if (store.website) {
+                <a [href]="store.website" target="_blank" rel="noopener noreferrer">{{ 'selector.officialSite' | t }}</a> ·
+              }
+              {{ 'selector.verification' | t: { date: store.verifiedAt } }}
+            </p>
+            @if (store.sources.length) {
+              <p class="sources">
+                {{ 'selector.sources' | t }}:
+                @for (source of store.sources; track source; let last = $last) {
+                  <a [href]="source" target="_blank" rel="noopener noreferrer">{{ source }}</a>{{ last ? '' : ' · ' }}
+                }
+              </p>
+            }
+          </div>
+        </mat-expansion-panel>
+      </div>
+    </li>
+  }
+</ul>

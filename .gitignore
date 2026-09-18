@@ -1,0 +1,19 @@
+# Dependencias y compilaciones
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+
+# Configuración local (no subir secretos)
+.env
+.env.*
+!.env.example
+
+# Pruebas
+e2e/test-results/
+e2e/playwright-report/
+coverage/
+
+# Sistema y editores
+.DS_Store
+*.log

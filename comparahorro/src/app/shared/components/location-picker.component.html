@@ -1,0 +1,147 @@
+@if (loadError(); as error) {
+  <div class="ca-notice error"><mat-icon aria-hidden="true">error</mat-icon><span>{{ error | msg }}</span></div>
+}
+
+@if (locations() && modes().length === 0) {
+  <p class="ca-small ca-muted">{{ 'picker.none' | t }}</p>
+} @else {
+  @if (modes().length > 1) {
+    <mat-button-toggle-group class="modes" [value]="mode()" (change)="setMode($event.value)" [attr.aria-label]="'picker.modes' | t">
+      @for (option of modes(); track option) {
+        <mat-button-toggle [value]="option">{{ modeKey(option) | t }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  }
+
+  @switch (mode()) {
+    @case ('zone') {
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'picker.department' | t }}</mat-label>
+          <mat-select [value]="department()" (selectionChange)="selectDepartment($event.value)">
+            @for (dep of departments(); track dep.name) {
+              <mat-option [value]="dep.name">{{ dep.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'picker.zone' | t }}</mat-label>
+          <mat-select [value]="zonePostalCode()" (selectionChange)="selectZone($event.value)" [disabled]="!department()">
+            @for (option of zoneOptions(); track option.postalCode) {
+              <mat-option [value]="option.postalCode">{{ option.name }} · {{ option.postalCode }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>{{ 'picker.zoneHint' | t }}</mat-hint>
+        </mat-form-field>
+      </div>
+    }
+    @case ('postalCode') {
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'picker.postalCode' | t }}</mat-label>
+          <input matInput inputmode="numeric" maxlength="5" [value]="manualPostalCode()" (input)="setManualPostalCode($any($event.target).value)" />
+          @if (manualPostalCode() && !candidate()) {
+            <mat-hint class="warn">{{ 'picker.postalCodeHint' | t }}</mat-hint>
+          }
+        </mat-form-field>
+      </div>
+    }
+    @case ('zip') {
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'picker.zip' | t }}</mat-label>
+          <input matInput inputmode="numeric" maxlength="5" autocomplete="postal-code" [value]="zip()" (input)="setZip($any($event.target).value)" />
+          @if (zip() && !candidate()) {
+            <mat-hint class="warn">{{ 'picker.zipHint' | t }}</mat-hint>
+          }
+        </mat-form-field>
+      </div>
+      <p class="ca-small ca-muted">{{ 'picker.zipNote' | t }}</p>
+    }
+    @case ('city') {
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'picker.city' | t }}</mat-label>
+          <mat-select [value]="cityName()" (selectionChange)="selectCity($event.value)">
+            @for (city of cities(); track city.name) {
+              <mat-option [value]="city.name">{{ city.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <p class="ca-small ca-muted">{{ 'picker.cityNote' | t }}</p>
+    }
+    @case ('gps') {
+      <div class="gps">
+        <button mat-stroked-button type="button" (click)="locate()" [disabled]="gpsStatus() === 'locating'">
+          <mat-icon>my_location</mat-icon>
+          {{ 'picker.useGps' | t }}
+        </button>
+        @if (gpsStatus() === 'locating') {
+          <mat-spinner diameter="24" />
+        }
+        @if (gps(); as coords) {
+          <span class="ca-small">{{ coords.lat.toFixed(4) }}, {{ coords.lng.toFixed(4) }}{{ coords.accuracy ? ' · ' + ('picker.accuracy' | t: { meters: coords.accuracy }) : '' }}</span>
+        }
+      </div>
+      @if (gpsMessage(); as message) {
+        <div class="ca-notice warn"><mat-icon aria-hidden="true">location_off</mat-icon><span>{{ message | t }}</span></div>
+      }
+      <p class="ca-small ca-muted">
+        {{ 'picker.gpsPrivacy' | t }}
+        @if (geoStoreNames()) {
+          {{ 'picker.gpsAccepted' | t: { stores: geoStoreNames() } }}
+        }
+        @if (nonGeoStoreNames()) {
+          {{ 'picker.gpsNotAccepted' | t: { stores: nonGeoStoreNames() } }}
+        }
+      </p>
+    }
+  }
+
+  <div class="ca-row actions">
+    <button mat-button type="button" (click)="checkBranches()" [disabled]="!candidate() || resolving() || queryableStores().length === 0">
+      <mat-icon>storefront</mat-icon>
+      {{ 'picker.checkBranches' | t }}
+    </button>
+    @if (resolving()) {
+      <mat-spinner diameter="20" />
+    }
+    <span class="ca-spacer"></span>
+    <button mat-flat-button type="button" (click)="submit()" [disabled]="!candidate()">{{ applyLabel() | t }}</button>
+  </div>
+
+  @if (resolutionError(); as error) {
+    <div class="ca-notice error"><mat-icon aria-hidden="true">error</mat-icon><span>{{ error | msg }}</span></div>
+  }
+  @if (resolution(); as results) {
+    <ul class="resolution">
+      @for (r of results; track r.storeId) {
+        <li>
+          <strong>{{ r.storeName }}:</strong>
+          @switch (r.status) {
+            @case ('ok') {
+              @if (r.applied?.assignedStores?.length) {
+                {{ 'picker.result.branch' | t: { branches: r.applied!.assignedStores.join(', ') } }}
+              } @else {
+                {{ 'picker.result.noBranch' | t }}
+              }
+              @if (r.applied?.priceVariesByLocation) {
+                <span class="ca-muted">{{ 'picker.result.pricesDepend' | t }}</span>
+              }
+            }
+            @case ('not_supported') {
+              <span class="ca-muted">{{ r.message | msg }}</span>
+            }
+            @case ('pending') {
+              <span class="ca-muted">{{ 'picker.result.pending' | t }}</span>
+            }
+            @default {
+              <span class="warn">{{ 'picker.result.failed' | t: { detail: (r.message | msg) } }}</span>
+            }
+          }
+        </li>
+      }
+    </ul>
+  }
+}

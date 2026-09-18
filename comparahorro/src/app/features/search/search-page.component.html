@@ -1,0 +1,209 @@
+<div class="ca-page">
+  <h1 class="ca-page-title">{{ 'search.title' | t }}</h1>
+  <p class="ca-page-subtitle">
+    @if (queryableNames()) {
+      {{ 'search.subtitle' | t: { stores: queryableNames() } }}
+    } @else {
+      {{ 'search.subtitleNoQueryable' | t }}
+    }
+  </p>
+
+  <form class="search-bar" (submit)="$event.preventDefault(); submit()" role="search">
+    <mat-form-field class="query" subscriptSizing="dynamic">
+      <mat-label>{{ 'search.label' | t }}</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        [formControl]="queryControl"
+        [placeholder]="(catalogLang() === 'en' ? 'search.placeholder.en' : 'search.placeholder.es') | t"
+        autocomplete="off"
+        enterkeyhint="search"
+        maxlength="80"
+      />
+      @if (queryControl.value) {
+        <button mat-icon-button matSuffix type="button" [attr.aria-label]="'search.clear' | t" (click)="queryControl.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+    @if (loading()) {
+      <button mat-stroked-button type="button" (click)="cancel()">
+        <mat-icon>stop_circle</mat-icon>
+        {{ 'common.cancel' | t }}
+      </button>
+    } @else {
+      <button mat-flat-button type="submit">
+        <mat-icon>search</mat-icon>
+        {{ 'search.submit' | t }}
+      </button>
+    }
+  </form>
+  @if (queryControl.touched && queryControl.value.trim().length < 2) {
+    <p class="ca-small error-text">{{ 'search.minLength' | t }}</p>
+  }
+  @if (i18n.lang() !== catalogLang() && preferences.country(); as country) {
+    <p class="ca-small ca-muted catalog-hint">
+      <mat-icon aria-hidden="true">translate</mat-icon>
+      {{ (catalogLang() === 'en' ? 'search.catalogLanguage.en' : 'search.catalogLanguage.es') | t: { country: (country.name | loc) } }}
+    </p>
+  }
+
+  <div class="ca-row suggestions" [attr.aria-label]="'search.suggestions' | t">
+    @for (term of suggestions(); track term) {
+      <button mat-stroked-button type="button" class="chip" (click)="searchSuggestion(term)">{{ term }}</button>
+    }
+  </div>
+
+  <div class="ca-row context">
+    @if (preferences.location(); as location) {
+      <span class="ca-tag info">
+        <mat-icon aria-hidden="true">location_on</mat-icon>
+        {{ location | locationLabel }}{{ location.isDefault ? ('loc.default' | t) : '' }}
+      </span>
+    } @else {
+      <span class="ca-tag">{{ 'loc.none' | t }}</span>
+    }
+    <a mat-button routerLink="/perfil">{{ 'search.changeStores' | t }}</a>
+  </div>
+
+  @if (!preferences.location()) {
+    @if (preferences.locationRequired()) {
+      <div class="ca-notice warn location-notice">
+        <mat-icon aria-hidden="true">location_on</mat-icon>
+        <span>
+          {{ 'search.locationRequired' | t }}
+          @if (locations()?.defaultLocation; as d) {
+            <button mat-button type="button" (click)="useDefaultLocation()">{{ 'search.useDefault' | t: { name: d.name, postalCode: d.postalCode } }}</button>
+          } @else {
+            <a mat-button routerLink="/perfil">{{ 'search.chooseLocation' | t }}</a>
+          }
+        </span>
+      </div>
+    } @else if (stockStoreNames()) {
+      <div class="ca-notice info location-notice">
+        <mat-icon aria-hidden="true">inventory_2</mat-icon>
+        <span>
+          {{ 'search.availabilityNeedsLocation' | t: { stores: stockStoreNames() } }}
+          <a mat-button routerLink="/perfil">{{ 'search.chooseLocation' | t }}</a>
+        </span>
+      </div>
+    }
+  }
+
+  @if (preferences.linkStores().length) {
+    <app-link-stores class="block" [stores]="preferences.linkStores()" [query]="linkQuery()" (note)="openManualPrice($event, linkQuery())" />
+  }
+
+  @if (loading()) {
+    <div class="ca-surface loading" role="status" aria-live="polite">
+      <mat-progress-bar mode="indeterminate" />
+      <span>{{ 'search.loading' | t: { query: pendingQuery(), stores: queryableNames() } }}</span>
+    </div>
+  }
+
+  @if (error(); as message) {
+    <div class="ca-notice error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <span>{{ message | msg }}</span>
+    </div>
+  }
+
+  @if (response(); as result) {
+    <app-store-query-status class="block" [stores]="result.stores" />
+
+    @if (result.offers.length === 0) {
+      @if (respondedCount() === 0) {
+        <app-empty-state icon="cloud_off" [title]="'search.noneRespondedTitle' | t" [message]="'search.noneRespondedMessage' | t" />
+      } @else {
+        <app-empty-state icon="search_off" [title]="'search.noResultsTitle' | t: { query: result.query }" [message]="'search.noResultsMessage' | t" />
+      }
+    } @else {
+      <section aria-labelledby="resumen">
+        <h2 id="resumen" class="ca-section-title"><mat-icon aria-hidden="true">insights</mat-icon>{{ 'search.summaryTitle' | t: { query: result.query } }}</h2>
+        <div class="summary">
+          @if (summary().cheapestPackage; as cheapest) {
+            <div class="ca-surface tile">
+              <span class="ca-small ca-muted">{{ 'search.cheapestPackage' | t }}</span>
+              <strong class="ca-price">{{ cheapest.price | money: cheapest.currency }}</strong>
+              <span>{{ cheapest.name }}</span>
+              <span class="ca-small ca-muted">{{ cheapest | presentation | orNA }} · {{ cheapest.storeName }}</span>
+            </div>
+          }
+          @if (summary().cheapestUnit; as unit) {
+            <div class="ca-surface tile">
+              <span class="ca-small ca-muted">{{ 'search.cheapestUnit' | t: { unit: (unit.per | unitName) } }}</span>
+              <strong class="ca-price">{{ unit.offer.unitPrice | unitPrice: unit.offer.currency }}</strong>
+              <span>{{ unit.offer.name }}</span>
+              <span class="ca-small ca-muted">{{ unit.offer | presentation | orNA }} · {{ unit.offer.price | money: unit.offer.currency }} · {{ unit.offer.storeName }}</span>
+            </div>
+          }
+          <p class="ca-small ca-muted note">{{ 'search.summaryNote' | t }}</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="comparaciones">
+        <h2 id="comparaciones" class="ca-section-title"><mat-icon aria-hidden="true">compare_arrows</mat-icon>{{ 'search.sameProductTitle' | t }}</h2>
+        @if (comparableGroups().length) {
+          <app-comparison-groups [groups]="comparableGroups()" (open)="openCompare($event)" />
+        } @else {
+          <div class="ca-notice info">
+            <mat-icon aria-hidden="true">info</mat-icon>
+            <span>{{ 'search.notEnoughToCompare' | t }}</span>
+          </div>
+        }
+      </section>
+
+      <section class="results-layout" aria-labelledby="resultados">
+        <aside class="filters">
+          @if (isHandset()) {
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title><mat-icon>tune</mat-icon>&nbsp;{{ 'search.filtersTitle' | t }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <app-offer-filters
+                [filters]="filters()"
+                [stores]="result.stores"
+                [currencySymbol]="currencySymbol()"
+                [dominantUnit]="summary().dominantUnit"
+                [defaultUnit]="defaultUnit()"
+                (changed)="updateFilters($event)"
+                (reset)="resetFilters()"
+              />
+            </mat-expansion-panel>
+          } @else {
+            <div class="ca-surface">
+              <app-offer-filters
+                [filters]="filters()"
+                [stores]="result.stores"
+                [currencySymbol]="currencySymbol()"
+                [dominantUnit]="summary().dominantUnit"
+                [defaultUnit]="defaultUnit()"
+                (changed)="updateFilters($event)"
+                (reset)="resetFilters()"
+              />
+            </div>
+          }
+        </aside>
+        <div class="results">
+          <h2 id="resultados" class="ca-section-title">{{ 'search.resultsCount' | t: { visible: visibleOffers().length, total: result.offers.length } }}</h2>
+          @if (visibleOffers().length === 0) {
+            <app-empty-state icon="filter_alt_off" [title]="'search.noFilteredTitle' | t">
+              <button mat-button type="button" (click)="resetFilters()">{{ 'search.clearFilters' | t }}</button>
+            </app-empty-state>
+          }
+          <div class="ca-grid">
+            @for (offer of visibleOffers(); track offer.id) {
+              <app-offer-card [offer]="offer" [group]="summary().groupByOfferId.get(offer.id)" (compare)="openCompare($event)" (addToList)="openAddToList($event)" />
+            }
+          </div>
+        </div>
+      </section>
+    }
+  } @else if (!loading() && !error()) {
+    @if (preferences.queryableStoreIds().length) {
+      <app-empty-state icon="shopping_basket" [title]="'search.startTitle' | t" [message]="'search.startMessage' | t" />
+    } @else {
+      <app-empty-state icon="travel_explore" [title]="'search.onlyLinksTitle' | t" [message]="'search.onlyLinksMessage' | t" />
+    }
+  }
+</div>

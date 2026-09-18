@@ -1,0 +1,90 @@
+<main class="login-page">
+  <mat-card appearance="outlined" class="login-card">
+    <div class="top">
+      <div class="brand">
+        <mat-icon aria-hidden="true">savings</mat-icon>
+        <div>
+          <h1>{{ 'register.title' | t }}</h1>
+          <p class="ca-muted">{{ 'register.subtitle' | t }}</p>
+        </div>
+      </div>
+      <app-language-switch />
+    </div>
+
+    @if (sent()) {
+      <div class="ca-notice ok" role="status">
+        <mat-icon aria-hidden="true">mark_email_read</mat-icon>
+        <span>{{ 'register.checkEmail' | t: { email: email } }}</span>
+      </div>
+      <div class="buttons">
+        <button mat-stroked-button type="button" (click)="resend()" [disabled]="busy()">{{ 'register.resend' | t }}</button>
+        <a mat-flat-button routerLink="/login">{{ 'register.goToLogin' | t }}</a>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form">
+        <mat-form-field>
+          <mat-label>{{ 'register.name' | t }}</mat-label>
+          <mat-icon matPrefix>badge</mat-icon>
+          <input matInput formControlName="fullName" autocomplete="name" maxlength="60" />
+          @if (form.controls.fullName.hasError('required')) {
+            <mat-error>{{ 'register.nameRequired' | t }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>{{ 'login.email' | t }}</mat-label>
+          <mat-icon matPrefix>mail</mat-icon>
+          <input matInput type="email" formControlName="email" autocomplete="email" inputmode="email" />
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>{{ 'login.emailRequired' | t }}</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>{{ 'login.emailInvalid' | t }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>{{ 'login.password' | t }}</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" autocomplete="new-password" />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword.set(!hidePassword())"
+            [attr.aria-label]="(hidePassword() ? 'login.showPassword' : 'login.hidePassword') | t"
+          >
+            <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <mat-hint>{{ 'register.passwordHint' | t }}</mat-hint>
+          @if (form.controls.password.hasError('minlength')) {
+            <mat-error>{{ 'register.passwordShort' | t }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>{{ 'register.confirm' | t }}</mat-label>
+          <mat-icon matPrefix>lock_reset</mat-icon>
+          <input matInput type="password" formControlName="confirm" autocomplete="new-password" />
+          @if (form.hasError('mismatch') && form.controls.confirm.touched) {
+            <mat-error>{{ 'register.mismatch' | t }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (error(); as message) {
+          <div class="ca-notice error" role="alert">
+            <mat-icon aria-hidden="true">error</mat-icon>
+            <span>{{ message | msg }}</span>
+          </div>
+        }
+
+        <div class="buttons">
+          <a mat-stroked-button routerLink="/login">{{ 'register.haveAccount' | t }}</a>
+          <button mat-flat-button type="submit" [disabled]="busy()">
+            <mat-icon>person_add</mat-icon>
+            {{ (busy() ? 'common.working' : 'register.submit') | t }}
+          </button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</main>

@@ -1,0 +1,226 @@
+{
+  "_comment": "Respuestas EN VIVO de Walmart Guatemala, La Torre y Maxi Despensa para el EAN 7441001698644 con código postal 01001, capturadas el 2026-09-16 entre 16:57:05 y 16:57:37 UTC desde un navegador sin cookies, con las mismas URLs que genera el servidor. Solo incluye los campos que usa la normalización; sha256 es el hash del JSON canónico (claves ordenadas) de products calculado en el navegador al capturar. Solo para pruebas automatizadas; la aplicación nunca usa estos datos como resultados en vivo.",
+  "gtin": "7441001698644",
+  "postalCode": "01001",
+  "stores": {
+    "walmart-gt": {
+      "at": "2026-09-16T16:57:05.333Z",
+      "url": "https://www.walmart.com.gt/api/io/_v/api/intelligent-search/product_search/?query=7441001698644&page=1&count=10&locale=es-GT&hideUnavailableItems=false&regionId=U1cjYW5kcmVpc29zdG9yZTQ1NDt3YWxtYXJ0Z3R3bTQwMzc%3D",
+      "recordsFiltered": 1,
+      "region": {
+        "id": "U1cjYW5kcmVpc29zdG9yZTQ1NDt3YWxtYXJ0Z3R3bTQwMzc=",
+        "sellers": [
+          {
+            "id": "andreisostore454",
+            "name": "Andreiso store"
+          },
+          {
+            "id": "walmartgtwm4037",
+            "name": "WM-DEL NORTE"
+          }
+        ]
+      },
+      "sha256": "9e4a03ac7bbc4e257143929dd94bd50e5a69cfe64c290a9867da76be7cd33009",
+      "products": [
+        {
+          "brand": "DOS PINOS",
+          "categories": [
+            "/Lácteos/Leche/Leche Deslactosada/",
+            "/Lácteos/Leche/",
+            "/Lácteos/"
+          ],
+          "items": [
+            {
+              "ean": "7441001698644",
+              "images": [
+                {
+                  "imageUrl": "https://walmartgt.vtexassets.com/arquivos/ids/621307/33335_01.jpg?v=638629789193500000"
+                }
+              ],
+              "itemId": "33335",
+              "measurementUnit": "un",
+              "name": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+              "nameComplete": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+              "sellers": [
+                {
+                  "commertialOffer": {
+                    "AvailableQuantity": 10000,
+                    "ListPrice": 18.9,
+                    "Price": 18.9,
+                    "PriceValidUntil": "2027-09-16T16:51:35Z",
+                    "PriceWithoutDiscount": 18.9,
+                    "discountHighlights": [],
+                    "spotPrice": 18.9,
+                    "teasers": []
+                  },
+                  "sellerDefault": true,
+                  "sellerId": "1",
+                  "sellerName": "Walmart GTM"
+                }
+              ],
+              "unitMultiplier": 1,
+              "variations": []
+            }
+          ],
+          "link": "/leche-dos-pinos-delactomy-descremada-1000ml/p",
+          "linkText": "leche-dos-pinos-delactomy-descremada-1000ml",
+          "productId": "33349",
+          "productName": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+          "properties": [
+            {
+              "name": "Medida de peso",
+              "values": [
+                "1000ml"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "la-torre-gt": {
+      "at": "2026-09-16T16:57:21.776Z",
+      "url": "https://www.latorre.com.gt/api/io/_v/api/intelligent-search/product_search/?query=7441001698644&page=1&count=10&locale=es-GT&hideUnavailableItems=false&regionId=v2.0FF824856C176774A176BD8457D6257F",
+      "recordsFiltered": 1,
+      "region": {
+        "id": "v2.0FF824856C176774A176BD8457D6257F",
+        "sellers": [
+          {
+            "id": "latorremxlatorrezona2",
+            "name": "latorremxlatorrezona2"
+          }
+        ]
+      },
+      "sha256": "22c461ceb5dbc742bcd41f5753d82ef9bc2f98cd5a268a8969ce4295bd38022e",
+      "products": [
+        {
+          "brand": "DOS PINOS",
+          "categories": [
+            "/Leches, Huevos y Derivados/Leches/Descremada/",
+            "/Leches, Huevos y Derivados/Leches/",
+            "/Leches, Huevos y Derivados/"
+          ],
+          "clusterHighlights": [],
+          "items": [
+            {
+              "ean": "7441001698644",
+              "images": [
+                {
+                  "imageUrl": "https://latorremx.vtexassets.com/arquivos/ids/186820/11097-frontal.jpg?v=638346362955900000"
+                }
+              ],
+              "itemId": "3763",
+              "measurementUnit": "un",
+              "name": "Leche UHT Descremada Delactomy",
+              "nameComplete": "Leche UHT Descremada Delactomy",
+              "sellers": [
+                {
+                  "commertialOffer": {
+                    "AvailableQuantity": 10000,
+                    "ListPrice": 20.65,
+                    "Price": 20.65,
+                    "PriceValidUntil": "2027-09-16T16:56:31Z",
+                    "PriceWithoutDiscount": 20.65,
+                    "discountHighlights": [],
+                    "spotPrice": 20.65,
+                    "teasers": []
+                  },
+                  "sellerDefault": true,
+                  "sellerId": "1",
+                  "sellerName": "Supermercados La Torre"
+                }
+              ],
+              "unitMultiplier": 1,
+              "variations": []
+            }
+          ],
+          "link": "/leche-uht-descremada-delactomy-11097/p",
+          "linkText": "leche-uht-descremada-delactomy-11097",
+          "productId": "3773",
+          "productName": "Leche UHT Descremada Delactomy",
+          "properties": [
+            {
+              "name": "Contenido Neto",
+              "values": [
+                "1lt."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "maxi-despensa-gt": {
+      "at": "2026-09-16T16:57:36.970Z",
+      "url": "https://www.maxidespensa.com.gt/api/io/_v/api/intelligent-search/product_search/?query=7441001698644&page=1&count=10&locale=es-GT&hideUnavailableItems=false&regionId=v2.5C54A032E81AAFDB79ECC1A37F34AEA8",
+      "recordsFiltered": 1,
+      "region": {
+        "id": "v2.5C54A032E81AAFDB79ECC1A37F34AEA8",
+        "sellers": [
+          {
+            "id": "walmartgtbo31",
+            "name": "Md Parroquia"
+          },
+          {
+            "id": "walmartgtwm99995",
+            "name": "WM Interior Bodega"
+          }
+        ]
+      },
+      "sha256": "8fcd64d21796460f3be61663f77f4bdffc49c1183a567677ba66c46235ad885e",
+      "products": [
+        {
+          "brand": "DOS PINOS",
+          "categories": [
+            "/Lácteos/Leche/Leche Deslactosada/",
+            "/Lácteos/Leche/",
+            "/Lácteos/"
+          ],
+          "items": [
+            {
+              "ean": "7441001698644",
+              "images": [
+                {
+                  "imageUrl": "https://bodegagt.vtexassets.com/arquivos/ids/621307/33335_01.jpg?v=638629789193500000"
+                }
+              ],
+              "itemId": "33335",
+              "measurementUnit": "un",
+              "name": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+              "nameComplete": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+              "sellers": [
+                {
+                  "commertialOffer": {
+                    "AvailableQuantity": 10000,
+                    "ListPrice": 18.5,
+                    "Price": 18.5,
+                    "PriceValidUntil": "2027-09-16T16:52:47Z",
+                    "PriceWithoutDiscount": 18.5,
+                    "discountHighlights": [],
+                    "spotPrice": 18.5,
+                    "teasers": []
+                  },
+                  "sellerDefault": false,
+                  "sellerId": "1",
+                  "sellerName": "Walmart GTM"
+                }
+              ],
+              "unitMultiplier": 1,
+              "variations": []
+            }
+          ],
+          "link": "/leche-dos-pinos-delactomy-descremada-1000ml/p",
+          "linkText": "leche-dos-pinos-delactomy-descremada-1000ml",
+          "productId": "33349",
+          "productName": "Leche Dos Pinos delactomy uht 0% grasa - 946 ml",
+          "properties": [
+            {
+              "name": "Medida de peso",
+              "values": [
+                "1000ml"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

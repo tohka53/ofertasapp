@@ -1,0 +1,112 @@
+<div class="ca-page ca-page-narrow">
+  <h1 class="ca-page-title">{{ 'profile.title' | t }}</h1>
+  <p class="ca-page-subtitle">{{ 'profile.subtitle' | t }}</p>
+
+  @if (error(); as message) {
+    <div class="ca-notice error" role="alert"><mat-icon aria-hidden="true">error</mat-icon><span>{{ message | msg }}</span></div>
+  }
+
+  <section class="ca-surface card" aria-labelledby="cuenta">
+    <h2 id="cuenta" class="card-title"><mat-icon aria-hidden="true">account_circle</mat-icon>{{ 'profile.account' | t }}</h2>
+    <dl class="ca-dl">
+      <dt>{{ 'profile.name' | t }}</dt>
+      <dd>{{ auth.user()?.name }}</dd>
+      <dt>{{ 'profile.email' | t }}</dt>
+      <dd>{{ auth.user()?.email }}</dd>
+      <dt>{{ 'profile.session' | t }}</dt>
+      <dd>{{ 'profile.sessionValue' | t: { date: (auth.user()?.signedInAt | dateTime) } }}</dd>
+    </dl>
+    <div class="ca-actions">
+      <button mat-stroked-button type="button" (click)="changeName()"><mat-icon>edit</mat-icon>{{ 'profile.changeName' | t }}</button>
+      <button mat-stroked-button type="button" (click)="resetPassword()"><mat-icon>lock_reset</mat-icon>{{ 'profile.changePassword' | t }}</button>
+    </div>
+    <p class="ca-small ca-muted">{{ 'profile.accountNote' | t }}</p>
+  </section>
+
+  <section class="ca-surface card" aria-labelledby="idioma">
+    <h2 id="idioma" class="card-title"><mat-icon aria-hidden="true">translate</mat-icon>{{ 'profile.language' | t }}</h2>
+    <app-language-switch />
+    <p class="ca-small ca-muted">{{ 'profile.languageNote' | t }}</p>
+  </section>
+
+  <section class="ca-surface card" aria-labelledby="pais">
+    <h2 id="pais" class="card-title"><mat-icon aria-hidden="true">public</mat-icon>{{ 'profile.country' | t }}</h2>
+    <div class="selects">
+      <mat-form-field class="country-select" subscriptSizing="dynamic">
+        <mat-label>{{ 'profile.countryLabel' | t }}</mat-label>
+        <mat-select [value]="preferences.countryCode()" (selectionChange)="changeCountry($event.value)">
+          @for (country of countries(); track country.code) {
+            <mat-option [value]="country.code">
+              {{ country.flag }} {{ country.name | loc }} · {{ country.currency }}
+              @if (country.storeCount === 0) {
+                {{ 'profile.noSources' | t }}
+              }
+              @if (listCountByCountry()[country.code]) {
+                {{ 'profile.listsCount' | t: { count: listCountByCountry()[country.code] } }}
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (preferences.requiresState() && states().length) {
+        <mat-form-field class="country-select" subscriptSizing="dynamic">
+          <mat-label>{{ 'profile.stateLabel' | t }}</mat-label>
+          <mat-select [value]="preferences.stateCode()" (selectionChange)="changeState($event.value)">
+            @for (state of sortedStates(); track state.code) {
+              <mat-option [value]="state.code">{{ state.name | loc }} · {{ state.code }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+    </div>
+  </section>
+
+  <section class="ca-surface card" aria-labelledby="tiendas">
+    <h2 id="tiendas" class="card-title">
+      <mat-icon aria-hidden="true">storefront</mat-icon>{{ 'profile.stores' | t }}
+      <span class="ca-spacer"></span>
+      <button mat-button type="button" (click)="loadStores(true)" [disabled]="storesLoading()"><mat-icon>refresh</mat-icon> {{ 'profile.checkStatus' | t }}</button>
+    </h2>
+    @if (storesLoading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @if (stores(); as data) {
+      @if (data.stores.length === 0) {
+        <app-empty-state icon="store_mall_directory" [title]="'stores.emptyTitle' | t: { place: (data.country.name | loc) }" />
+      } @else {
+        <app-store-selector [stores]="data.stores" [selected]="storeDraft()" [state]="data.state" (selectedChange)="storeDraft.set($event)" />
+        <div class="ca-actions save">
+          @if (storesDirty()) {
+            <button mat-button type="button" (click)="storeDraft.set(preferences.selectedStoreIds().slice())">{{ 'profile.discard' | t }}</button>
+          }
+          <button mat-flat-button type="button" (click)="saveStores()" [disabled]="!storesDirty() || storeDraft().length === 0">{{ 'profile.saveStores' | t }}</button>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="ca-surface card" aria-labelledby="ubicacion">
+    <h2 id="ubicacion" class="card-title"><mat-icon aria-hidden="true">location_on</mat-icon>{{ 'profile.location' | t }}</h2>
+    <p class="ca-small">
+      {{ 'profile.currentLocation' | t }} <strong>{{ preferences.location() | locationLabel }}</strong>
+      @if (preferences.location()) {
+        <button mat-button type="button" (click)="clearLocation()">{{ 'common.remove' | t }}</button>
+      }
+    </p>
+    @if (priceByLocationStores()) {
+      <div class="ca-notice warn">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        <span>{{ 'profile.priceByLocation' | t: { stores: priceByLocationStores() } }}</span>
+      </div>
+    }
+    @if (preferences.countryCode(); as code) {
+      <app-location-picker [countryCode]="code" [value]="preferences.location()" [stores]="preferences.selectedStores()" (apply)="saveLocation($event)" />
+    }
+  </section>
+
+  <section class="ca-surface card" aria-labelledby="sesion">
+    <h2 id="sesion" class="card-title"><mat-icon aria-hidden="true">logout</mat-icon>{{ 'profile.sessionTitle' | t }}</h2>
+    <p class="ca-small ca-muted">{{ 'profile.dataNote' | t }}</p>
+    <button mat-stroked-button type="button" (click)="logout()">{{ 'shell.logout' | t }}</button>
+  </section>
+</div>

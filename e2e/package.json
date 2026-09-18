@@ -1,0 +1,14 @@
+{
+  "name": "comparahorro-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pruebas de extremo a extremo de ComparAhorro con tiendas simuladas a partir de respuestas reales capturadas.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "mock": "node mock-stores.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

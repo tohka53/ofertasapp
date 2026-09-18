@@ -1,0 +1,24 @@
+{
+  "name": "ofertasapp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ComparAhorro: comparador de precios entre tiendas con listas de compras compartidas y grupos familiares sobre Supabase.",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "postinstall": "npm install --prefix server && npm install --prefix comparahorro",
+    "start": "npm run dev",
+    "dev": "concurrently -k -n server,web -c green,cyan \"npm --prefix server run dev\" \"npm --prefix comparahorro run serve\"",
+    "build": "npm --prefix server run build && npm --prefix comparahorro run build",
+    "start:prod": "npm --prefix server start",
+    "test": "npm --prefix server test && npm --prefix comparahorro test -- --watch=false",
+    "test:e2e": "npm run build && npm install --prefix e2e && npm --prefix e2e test",
+    "verify:stores": "npm --prefix server run verify:stores --",
+    "db:schema": "echo \"Ejecuta supabase/schema.sql en el SQL Editor del proyecto de Supabase\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
