@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { CatalogService } from '../../core/services/catalog.service';
+import { NotifyService } from '../../core/services/notify.service';
 import { summarizeList } from '../../core/logic/list-math';
 import type { ShoppingList } from '../../core/models/app.models';
 import { defaultListName, ListsService } from '../../core/services/lists.service';
@@ -77,13 +79,22 @@ export class ListsPageComponent {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
+  private readonly catalog = inject(CatalogService);
+  private readonly notify = inject(NotifyService);
 
   readonly cards = computed(() => this.lists.listsForCurrentCountry().map((list: ShoppingList) => ({ list, summary: summarizeList(list) })));
   readonly currentListName = computed(() => defaultListName(new Date().getMonth() + 1, this.i18n.lang()));
 
-  create(): void {
-    const country = this.preferences.country();
-    if (!country) return;
+  async create(): Promise<void> {
+    let country = this.preferences.country();
+    if (!country) {
+      await this.catalog.loadCountries().catch(() => []);
+      country = this.preferences.country();
+    }
+    if (!country) {
+      this.notify.error(this.i18n.t('data.loadError'));
+      return;
+    }
     this.dialog
       .open<ListFormDialogComponent, object, ListFormResult>(ListFormDialogComponent, { data: {}, width: '480px', maxWidth: '96vw' })
       .afterClosed()

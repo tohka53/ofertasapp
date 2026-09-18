@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import { I18nService } from '../core/i18n/i18n.service';
 import type { MessageKey } from '../core/i18n/translate';
 import { AuthService } from '../core/services/auth.service';
+import { CatalogService } from '../core/services/catalog.service';
 import { ListsService } from '../core/services/lists.service';
 import { PreferencesService } from '../core/services/preferences.service';
 import { ConfirmDialogComponent, type ConfirmDialogData } from '../shared/dialogs/simple-dialogs.component';
@@ -45,6 +46,18 @@ export class ShellComponent {
   ];
 
   readonly listCount = computed(() => this.lists.lists().length);
+
+  constructor() {
+    const catalog = inject(CatalogService);
+    effect(() => {
+      const code = this.preferences.countryCode();
+      untracked(() => {
+        if (!code) return;
+        void catalog.loadCountries().catch(() => []);
+        void catalog.loadStores(code, false, this.preferences.stateCode()).catch(() => undefined);
+      });
+    });
+  }
 
   logout(): void {
     this.dialog
