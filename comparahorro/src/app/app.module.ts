@@ -19,13 +19,15 @@ import { SharedModule } from './shared/shared.module';
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(withFetch()),
-    provideAppInitializer(() => {
+    provideAppInitializer(async () => {
       const auth = inject(AuthService);
-      inject(ProfileService);
+      const profile = inject(ProfileService);
       inject(ListsService);
       inject(FamiliesService);
       inject(InvitationsService);
-      return auth.restore();
+      await auth.restore();
+      const userId = auth.userId();
+      if (userId) await profile.load(userId);
     }),
     { provide: LOCALE_ID, useValue: 'es-GT' },
     { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-icons-outlined' } },

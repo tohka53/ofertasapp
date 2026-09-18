@@ -19,6 +19,7 @@ export class ProfileService {
   private readonly profileState = signal<ProfileRow | null>(null);
   private readonly restoredState = signal(false);
   private applying = false;
+  private loadedFor: string | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   readonly profile = this.profileState.asReadonly();
@@ -31,6 +32,7 @@ export class ProfileService {
         if (!id) {
           this.profileState.set(null);
           this.restoredState.set(false);
+          this.loadedFor = null;
           return;
         }
         void this.load(id);
@@ -48,8 +50,11 @@ export class ProfileService {
   }
 
   async load(userId: string): Promise<void> {
+    if (this.loadedFor === userId) return;
+    this.loadedFor = userId;
     const { data, error } = await this.supabase.client.from('profiles').select(COLUMNS).eq('id', userId).maybeSingle();
     if (error || !data) {
+      if (error) this.loadedFor = null;
       this.restoredState.set(true);
       return;
     }
