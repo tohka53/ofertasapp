@@ -24,9 +24,9 @@ function list(): ShoppingList {
     memberCount: 1,
     purgeAt: null,
     items: [
-      { id: 'i1', productQuery: 'leche', desiredPresentation: null, quantity: 1, purchased: false, offer: toSelectedOffer(laTorreOffer), addedAt: '', addedBy: 'u1' },
-      { id: 'i2', productQuery: 'suli', desiredPresentation: null, quantity: 2, purchased: false, offer: toSelectedOffer(suli), addedAt: '', addedBy: 'u1' },
-      { id: 'i3', productQuery: 'pendiente', desiredPresentation: null, quantity: 1, purchased: false, offer: null, addedAt: '', addedBy: 'u1' },
+      { id: 'i1', productQuery: 'leche', desiredPresentation: null, quantity: 1, purchased: false, offer: toSelectedOffer(laTorreOffer), addedAt: '', addedBy: 'u1', assignedTo: null },
+      { id: 'i2', productQuery: 'suli', desiredPresentation: null, quantity: 2, purchased: false, offer: toSelectedOffer(suli), addedAt: '', addedBy: 'u1', assignedTo: null },
+      { id: 'i3', productQuery: 'pendiente', desiredPresentation: null, quantity: 1, purchased: false, offer: null, addedAt: '', addedBy: 'u1', assignedTo: null },
     ],
   };
 }

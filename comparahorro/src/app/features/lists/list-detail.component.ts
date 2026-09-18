@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -7,6 +7,9 @@ import type { KnownCondition, LocalizedText } from '../../core/models/api.models
 import type { ListItem } from '../../core/models/app.models';
 import { CatalogService } from '../../core/services/catalog.service';
 import { FamiliesService } from '../../core/services/families.service';
+import { AuthService } from '../../core/services/auth.service';
+import { InvitationsService } from '../../core/services/invitations.service';
+import type { MemberInfo } from '../../core/models/db.models';
 import { ListsService } from '../../core/services/lists.service';
 import { NotifyService } from '../../core/services/notify.service';
 import { PreferencesService } from '../../core/services/preferences.service';
@@ -33,6 +36,8 @@ export class ListDetailComponent {
   private readonly i18n = inject(I18nService);
   readonly preferences = inject(PreferencesService);
   private readonly families = inject(FamiliesService);
+  private readonly invitations = inject(InvitationsService);
+  private readonly auth = inject(AuthService);
 
   /** Parámetro de ruta :id (bindToComponentInputs). */
   readonly id = input.required<string>();
@@ -43,6 +48,42 @@ export class ListDetailComponent {
     return list ? summarizeList(list) : null;
   });
   readonly editable = computed(() => this.list()?.countryCode === this.preferences.countryCode());
+
+  /** Integrantes de la lista, para asignar responsable de compra. */
+  readonly members = signal<MemberInfo[]>([]);
+  private loadedMembersFor: string | null = null;
+
+  readonly assignedToMe = computed(() => {
+    const me = this.auth.userId();
+    if (!me) return 0;
+    return this.list()?.items.filter((i) => i.assignedTo === me && !i.purchased).length ?? 0;
+  });
+
+  constructor() {
+    effect(() => {
+      const list = this.list();
+      untracked(() => {
+        if (!list || list.memberCount < 2) {
+          this.members.set([]);
+          this.loadedMembersFor = null;
+          return;
+        }
+        if (this.loadedMembersFor === list.id) return;
+        this.loadedMembersFor = list.id;
+        void this.invitations.listMembers(list.id).then((people) => this.members.set(people));
+      });
+    });
+  }
+
+  assigneeName(item: ListItem): string {
+    if (!item.assignedTo) return this.i18n.t('detail.assignNobody');
+    return this.members().find((m) => m.user_id === item.assignedTo)?.nombre ?? this.i18n.t('detail.assignUnknown');
+  }
+
+  assign(item: ListItem, userId: string | null): void {
+    const list = this.list();
+    if (list) this.listsService.setAssignee(list.id, item.id, userId);
+  }
 
   familyName(): string | null {
     return this.families.get(this.list()?.familyId ?? null)?.name ?? null;

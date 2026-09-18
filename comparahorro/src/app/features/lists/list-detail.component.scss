@@ -157,3 +157,27 @@
     height: 18px;
   }
 }
+
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--ca-muted);
+  }
+
+  button {
+    padding-inline: 6px;
+    min-width: 0;
+    font: var(--mat-sys-body-small);
+  }
+}
+
+.mine {
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+}

@@ -65,6 +65,8 @@ export interface ListItem {
   offer: SelectedOffer | null;
   addedAt: string;
   addedBy: string | null;
+  /** Integrante de la lista a quien le toca comprar este producto. */
+  assignedTo: string | null;
 }
 
 export interface ShoppingList {

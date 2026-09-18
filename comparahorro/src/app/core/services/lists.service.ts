@@ -212,6 +212,7 @@ export class ListsService {
       offer: null,
       addedAt: new Date().toISOString(),
       addedBy: this.auth.userId(),
+      assignedTo: null,
     };
     this.patch(listId, (list) => ({ ...list, items: [...list.items, item] }));
     this.insertItem(listId, item);
@@ -237,6 +238,7 @@ export class ListsService {
       offer: toSelectedOffer(offer),
       addedAt: new Date().toISOString(),
       addedBy: this.auth.userId(),
+      assignedTo: null,
     };
     this.patch(listId, (l) => ({ ...l, items: [...l.items, item] }));
     this.insertItem(listId, item);
@@ -255,6 +257,7 @@ export class ListsService {
       offer: manualOffer(input, list.currency, newId()),
       addedAt: new Date().toISOString(),
       addedBy: this.auth.userId(),
+      assignedTo: null,
     };
     this.patch(listId, (l) => ({ ...l, items: [...l.items, item] }));
     this.insertItem(listId, item);
@@ -286,6 +289,12 @@ export class ListsService {
     this.updateItem(itemId, { purchased });
   }
 
+  /** Marca a quien le toca comprar el articulo, o lo deja sin responsable. */
+  setAssignee(listId: string, itemId: string, userId: string | null): void {
+    this.patchItem(listId, itemId, (item) => ({ ...item, assignedTo: userId }));
+    this.updateItem(itemId, { assigned_to: userId });
+  }
+
   removeItem(listId: string, itemId: string): void {
     this.patch(listId, (list) => ({ ...list, items: list.items.filter((i) => i.id !== itemId) }));
     void this.run(async () => {
@@ -315,12 +324,16 @@ export class ListsService {
         purchased: item.purchased,
         offer: item.offer,
         added_by: item.addedBy,
+        assigned_to: item.assignedTo,
       });
       if (error) throw error;
     });
   }
 
-  private updateItem(itemId: string, patch: Partial<{ quantity: number; purchased: boolean; offer: SelectedOffer | null }>): void {
+  private updateItem(
+    itemId: string,
+    patch: Partial<{ quantity: number; purchased: boolean; offer: SelectedOffer | null; assigned_to: string | null }>,
+  ): void {
     void this.run(async () => {
       const { error } = await this.supabase.client.from('list_items').update(patch).eq('id', itemId);
       if (error) throw error;
@@ -425,6 +438,7 @@ export class ListsService {
       offer: row.offer,
       addedAt: row.added_at,
       addedBy: row.added_by,
+      assignedTo: row.assigned_to,
     };
   }
 

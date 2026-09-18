@@ -722,4 +722,9 @@ export const EN: Record<MessageKey, string> = {
   'profile.passwordSent': 'We sent a link to {email} to change your password.',
 
   'profile.dataNote': 'Your lists, groups and preferences are saved in your account.',
+
+  'detail.assignNobody': 'Unassigned',
+  'detail.assignUnknown': 'Another member',
+  'detail.assignAria': 'Who buys {name}',
+  'detail.assignedToMe': 'You are in charge of {count, plural, one {# product} other {# products}}',
 };

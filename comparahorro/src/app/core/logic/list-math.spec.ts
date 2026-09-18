@@ -12,6 +12,7 @@ function item(id: string, quantity: number, offer: Parameters<typeof makeOffer>[
     offer: offer ? toSelectedOffer(makeOffer(offer)) : null,
     addedAt: '2026-09-16T15:00:00.000Z',
     addedBy: 'u1',
+    assignedTo: null,
   };
 }
 
@@ -73,6 +74,7 @@ describe('cálculos de listas', () => {
       offer: manualOffer({ storeId: 'pricesmart-gt', storeName: 'PriceSmart', productName: 'Aceite 3 L', presentation: '3 L', price: 25, seenOn: '2026-09-16', url: '' }, 'GTQ', 'm1'),
       addedAt: '2026-09-16T15:00:00.000Z',
       addedBy: 'u1',
+      assignedTo: null,
     };
     const summary = summarizeList(list([noted, item('ok', 1, { id: 'lt:2', storeId: 'la-torre-gt', storeName: 'La Torre', price: 20.65 })]));
     expect(summary.totalCents).toBe(5000 + 2065);

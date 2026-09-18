@@ -59,6 +59,9 @@
         @if (s.unpricedItems.length) {
           <span class="warn">{{ 'detail.unpricedNotCounted' | t: { count: s.unpricedItems.length } }}</span>
         }
+        @if (assignedToMe()) {
+          <span class="mine">{{ 'detail.assignedToMe' | t: { count: assignedToMe() } }}</span>
+        }
         @if (s.manualCount) {
           <span class="manual-count">{{ 'detail.manualCount' | t: { count: s.manualCount } }}</span>
         }
@@ -85,6 +88,23 @@
                 <strong>{{ item.productQuery }}</strong>
                 <span class="ca-small ca-muted">{{ 'detail.desired' | t: { value: (item.desiredPresentation | orNA: 'common.notSpecified') } }}</span>
                 <span class="ca-small">{{ 'detail.pendingPrice' | t }}</span>
+                @if (members().length > 1) {
+                  <span class="assignee">
+                    <mat-icon aria-hidden="true">{{ item.assignedTo ? 'assignment_ind' : 'person_search' }}</mat-icon>
+                    <button mat-button type="button" [matMenuTriggerFor]="quien" [disabled]="!editable()" [attr.aria-label]="'detail.assignAria' | t: { name: item.productQuery }">
+                      {{ assigneeName(item) }}
+                    </button>
+                    <mat-menu #quien="matMenu">
+                      <button mat-menu-item type="button" (click)="assign(item, null)">{{ 'detail.assignNobody' | t }}</button>
+                      @for (member of members(); track member.user_id) {
+                        <button mat-menu-item type="button" (click)="assign(item, member.user_id)">
+                          <mat-icon>{{ member.user_id === item.assignedTo ? 'check' : 'person' }}</mat-icon>
+                          {{ member.nombre }}
+                        </button>
+                      }
+                    </mat-menu>
+                  </span>
+                }
               </div>
               <div class="qty">
                 <button mat-icon-button type="button" (click)="step(item, -1)" [disabled]="!editable() || item.quantity <= 1" [attr.aria-label]="'detail.minus' | t"><mat-icon>remove</mat-icon></button>
@@ -141,6 +161,23 @@
                   <span class="ca-row"><app-status-tag [label]="'detail.manualTag' | t" tone="warn" icon="edit_note" /></span>
                 }
                 <span class="ca-small ca-muted">{{ offer | presentation | orNA }} · {{ offer.brand | orNA }}</span>
+                @if (members().length > 1) {
+                  <span class="assignee">
+                    <mat-icon aria-hidden="true">{{ item.assignedTo ? 'assignment_ind' : 'person_search' }}</mat-icon>
+                    <button mat-button type="button" [matMenuTriggerFor]="quien" [disabled]="!editable()" [attr.aria-label]="'detail.assignAria' | t: { name: item.productQuery }">
+                      {{ assigneeName(item) }}
+                    </button>
+                    <mat-menu #quien="matMenu">
+                      <button mat-menu-item type="button" (click)="assign(item, null)">{{ 'detail.assignNobody' | t }}</button>
+                      @for (member of members(); track member.user_id) {
+                        <button mat-menu-item type="button" (click)="assign(item, member.user_id)">
+                          <mat-icon>{{ member.user_id === item.assignedTo ? 'check' : 'person' }}</mat-icon>
+                          {{ member.nombre }}
+                        </button>
+                      }
+                    </mat-menu>
+                  </span>
+                }
                 <span class="ca-small">{{ 'detail.packagePrice' | t: { price: (offer.price | money: offer.currency), unit: (offer.unitPrice | unitPrice: offer.currency) } }}</span>
                 @if (offer.promotions.length) {
                   <app-promotion-list [promotions]="offer.promotions" [currency]="offer.currency" [storeName]="offer.storeName" />

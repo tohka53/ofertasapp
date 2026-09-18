@@ -34,6 +34,7 @@ export interface ListItemRow {
   purchased: boolean;
   offer: SelectedOffer | null;
   added_by: string | null;
+  assigned_to: string | null;
   added_at: string;
   updated_at: string;
 }

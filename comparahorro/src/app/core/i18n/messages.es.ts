@@ -720,6 +720,11 @@ export const ES = {
   'profile.passwordSent': 'Te enviamos un enlace a {email} para cambiar la contraseña.',
 
   'profile.dataNote': 'Tus listas, grupos y preferencias quedan guardados en tu cuenta.',
+
+  'detail.assignNobody': 'Sin responsable',
+  'detail.assignUnknown': 'Otro integrante',
+  'detail.assignAria': 'Responsable de comprar {name}',
+  'detail.assignedToMe': 'Te tocan {count, plural, one {# producto} other {# productos}}',
 };
 
 export type MessageKey = keyof typeof ES;

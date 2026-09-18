@@ -99,11 +99,16 @@ create table if not exists public.list_items (
   purchased boolean not null default false,
   offer jsonb,
   added_by uuid references public.profiles (id) on delete set null,
+  assigned_to uuid references public.profiles (id) on delete set null,
   added_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+alter table public.list_items
+  add column if not exists assigned_to uuid references public.profiles (id) on delete set null;
+
 create index if not exists list_items_list_idx on public.list_items (list_id);
+create index if not exists list_items_assigned_idx on public.list_items (assigned_to);
 
 create table if not exists public.invitations (
   id uuid primary key default gen_random_uuid(),
