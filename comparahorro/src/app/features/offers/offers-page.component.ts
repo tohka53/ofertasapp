@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import type { Observable } from 'rxjs';
 import type { MessageKey } from '../../core/i18n/translate';
@@ -111,7 +111,7 @@ const CATEGORIES: Category[] = [
     .store-filter { width: 240px; max-width: 100%; }
   `,
 })
-export class OffersPageComponent extends OfferResultsBase implements OnInit {
+export class OffersPageComponent extends OfferResultsBase {
   private readonly api = inject(ApiService);
   protected readonly state = inject(SearchStateService).offers;
 
@@ -126,10 +126,14 @@ export class OffersPageComponent extends OfferResultsBase implements OnInit {
   constructor() {
     super();
     this.startListening();
-  }
-
-  ngOnInit(): void {
-    if (!this.state().response && !this.loading() && this.preferences.queryableStoreIds().length) this.run(this.state().query);
+    // El catalogo de tiendas llega despues del primer render: se espera a tenerlo
+    // para lanzar la consulta, en vez de dejar la pantalla vacia sin avisar.
+    effect(() => {
+      const stores = this.preferences.queryableStoreIds();
+      untracked(() => {
+        if (stores.length && !this.state().response && !this.loading()) this.run(this.state().query);
+      });
+    });
   }
 
   protected fetch(query: string): Observable<SearchResponse> {
