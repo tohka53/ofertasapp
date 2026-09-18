@@ -76,16 +76,4 @@ export class StoreSelectorComponent {
     return `reason.${store.pendingReasonCode}`;
   }
 
-  panelKey(store: StoreSummary): MessageKey {
-    if (store.integrationKind === 'link') return 'selector.howLinkWorks';
-    return store.queryable ? 'selector.howQueried' : 'selector.whyPending';
-  }
-
-  bannerNames(store: StoreSummary): string {
-    const state = this.state();
-    return store.banners
-      .filter((b) => !state || b.states.includes(state))
-      .map((b) => b.name)
-      .join(', ');
-  }
 }

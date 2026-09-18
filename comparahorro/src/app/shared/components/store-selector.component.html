@@ -60,63 +60,6 @@
             </span>
           </div>
         }
-        <mat-expansion-panel class="more">
-          <mat-expansion-panel-header>
-            <mat-panel-title class="ca-small">{{ panelKey(store) | t }}</mat-panel-title>
-          </mat-expansion-panel-header>
-          <div class="ca-small details">
-            @if (store.queryable) {
-              <p>{{ store.mechanism | loc }}</p>
-              @if (store.location.note) {
-                <p>{{ store.location.note | loc }}</p>
-              }
-            } @else {
-              @if (store.integrationKind === 'link') {
-                <p>{{ 'selector.linkExplain' | t }}</p>
-              }
-              @if (store.mechanism) {
-                <p>{{ store.mechanism | loc }}</p>
-              }
-              <p>{{ store.pendingReason | loc }}</p>
-              @if (store.howToEnable) {
-                <p><strong>{{ 'selector.toEnable' | t }}</strong> {{ store.howToEnable | loc }}</p>
-              }
-              @for (item of store.evidence; track $index) {
-                <p class="ca-muted">{{ item | loc }}</p>
-              }
-            }
-            @if (store.banners.length) {
-              <p>{{ 'selector.banners' | t: { names: bannerNames(store) } }}</p>
-            }
-            @if (store.operator) {
-              <p>{{ 'selector.operator' | t: { name: store.operator } }}</p>
-            }
-            @for (condition of store.knownConditions; track $index) {
-              <p>
-                {{ condition.label | loc }} ·
-                <a [href]="condition.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'common.source' | t }}</a>
-                ({{ 'common.verifiedOn' | t: { date: condition.verifiedAt } }})
-              </p>
-            }
-            @for (note of store.notes; track $index) {
-              <p>{{ note | loc }}</p>
-            }
-            <p>
-              @if (store.website) {
-                <a [href]="store.website" target="_blank" rel="noopener noreferrer">{{ 'selector.officialSite' | t }}</a> ·
-              }
-              {{ 'selector.verification' | t: { date: store.verifiedAt } }}
-            </p>
-            @if (store.sources.length) {
-              <p class="sources">
-                {{ 'selector.sources' | t }}:
-                @for (source of store.sources; track source; let last = $last) {
-                  <a [href]="source" target="_blank" rel="noopener noreferrer">{{ source }}</a>{{ last ? '' : ' · ' }}
-                }
-              </p>
-            }
-          </div>
-        </mat-expansion-panel>
       </div>
     </li>
   }
