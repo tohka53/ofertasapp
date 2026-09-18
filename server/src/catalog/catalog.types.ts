@@ -65,6 +65,8 @@ export interface VtexIntegration {
     /** Expresión regular (fuente) para colecciones destacadas que son promociones. */
     clusterHighlightPattern: string | null;
   };
+  /** Colección que la tienda publica como sus ofertas (productClusterIds). Si está, la pestaña Ofertas usa solo esa. */
+  offersClusterId: string | null;
   /** Propiedades de producto que contienen la presentación, en orden de prioridad. */
   contentProperties: string[];
   verifiedAt: string;

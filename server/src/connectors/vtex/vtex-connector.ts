@@ -47,6 +47,7 @@ export class VtexConnector implements StoreConnector {
 
   async search(params: ConnectorSearchParams): Promise<ConnectorSearchResult> {
     const warnings: AppMessage[] = [];
+    if (params.sort === 'discount' && this.integration.offersClusterId) return this.publishedOffers(params, warnings);
     const region = await this.regionFor(params.location, params.signal, warnings);
 
     const isUrl = this.intelligentSearchUrl(params.query, params.count, params.sort, params.hideUnavailable, region?.regionId ?? null);
@@ -142,6 +143,23 @@ export class VtexConnector implements StoreConnector {
     } catch (error) {
       return { reachable: false, latencyMs: Date.now() - started, message: classifyError(error).message };
     }
+  }
+
+  /**
+   * Ofertas tomadas de la colección que la tienda publica (productClusterIds),
+   * en lugar de deducirlas ordenando el catálogo por descuento.
+   */
+  private async publishedOffers(params: ConnectorSearchParams, warnings: AppMessage[]): Promise<ConnectorSearchResult> {
+    const cluster = this.integration.offersClusterId as string;
+    const ft = params.query.trim() ? `ft=${encodeURIComponent(params.query.trim())}&` : '';
+    const to = Math.max(0, Math.min(params.count, 50) - 1);
+    const url = `${this.baseUrl}/api/catalog_system/pub/products/search?${ft}fq=productClusterIds:${encodeURIComponent(cluster)}&_from=0&_to=${to}&sc=${this.integration.salesChannel}`;
+    const response = await this.options.http.getJson<VtexProduct[]>(url, { signal: params.signal, timeoutMs: this.options.timeoutMs });
+    let offers = this.normalizeAll(Array.isArray(response.data) ? response.data : [], response.fetchedAt, this.offerLocation(null, null), 'catalog-legacy', null);
+    if (params.hideUnavailable) offers = offers.filter((o) => o.availability === 'available');
+    const resources = response.headers.get('resources');
+    const total = resources ? Number(resources.split('/')[1]) : Number.NaN;
+    return { offers, totalAvailable: Number.isFinite(total) ? total : null, location: null, warnings };
   }
 
   private async legacySearch(params: ConnectorSearchParams, warnings: AppMessage[]): Promise<ConnectorSearchResult> {

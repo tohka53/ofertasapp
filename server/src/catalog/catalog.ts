@@ -55,6 +55,7 @@ function vtex(config: {
   location?: VtexLocationConfig;
   teaserConvention?: 'walmart-ca' | null;
   clusterHighlightPattern?: string | null;
+  offersClusterId?: string | null;
   contentProperties?: string[];
 }): VtexIntegration {
   return {
@@ -65,6 +66,7 @@ function vtex(config: {
     locale: config.locale,
     location: config.location ?? NO_LOCATION,
     promotions: { teaserConvention: config.teaserConvention ?? null, clusterHighlightPattern: config.clusterHighlightPattern ?? null },
+    offersClusterId: config.offersClusterId ?? null,
     contentProperties: config.contentProperties ?? WALMART_PROPERTIES,
     verifiedAt: VERIFIED,
   };
@@ -253,6 +255,7 @@ const GUATEMALA: StoreDefinition[] = [
       countryIso3: 'GTM',
       locale: 'es-GT',
       clusterHighlightPattern: 'descuento|oferta|promo|%|2x1|3x2|gratis|rebaja',
+      offersClusterId: '137',
       contentProperties: ['Contenido Neto', 'Tamaño (Gramaje, Volumen)'],
       location: {
         supportsPostalCode: true,
