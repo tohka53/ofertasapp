@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import type { AppMessage } from '../../core/models/api.models';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -27,11 +27,11 @@ import { AuthService } from '../../core/services/auth.service';
             <span>{{ 'forgot.sent' | t: { email: email.value } }}</span>
           </div>
         } @else {
-          <form class="form" (ngSubmit)="submit()" novalidate>
+          <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
             <mat-form-field>
               <mat-label>{{ 'login.email' | t }}</mat-label>
               <mat-icon matPrefix>mail</mat-icon>
-              <input matInput type="email" [formControl]="email" autocomplete="email" inputmode="email" />
+              <input matInput type="email" formControlName="email" autocomplete="email" inputmode="email" />
               @if (email.hasError('email')) {
                 <mat-error>{{ 'login.emailInvalid' | t }}</mat-error>
               }
@@ -56,7 +56,10 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class ForgotPasswordComponent {
   private readonly auth = inject(AuthService);
-  readonly email = new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] });
+  readonly form = new FormGroup({
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+  });
+  readonly email = this.form.controls.email;
   readonly error = signal<AppMessage | null>(null);
   readonly busy = signal(false);
   readonly sent = signal(false);

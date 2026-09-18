@@ -148,16 +148,16 @@ export interface TextFormDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
-    <form (ngSubmit)="save()" novalidate>
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <mat-dialog-content>
         <mat-form-field appearance="outline" class="ca-full-width">
           <mat-label>{{ data.label }}</mat-label>
-          <input matInput [formControl]="control" [maxlength]="data.maxLength ?? 60" autocomplete="off" cdkFocusInitial />
+          <input matInput formControlName="value" [maxlength]="data.maxLength ?? 60" autocomplete="off" cdkFocusInitial />
         </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>{{ 'common.cancel' | t }}</button>
-        <button mat-flat-button type="submit" [disabled]="control.invalid">{{ data.confirmLabel ?? ('common.save' | t) }}</button>
+        <button mat-flat-button type="submit" [disabled]="form.invalid">{{ data.confirmLabel ?? ('common.save' | t) }}</button>
       </mat-dialog-actions>
     </form>
   `,
@@ -165,16 +165,18 @@ export interface TextFormDialogData {
 export class TextFormDialogComponent {
   readonly data = inject<TextFormDialogData>(MAT_DIALOG_DATA);
   private readonly ref = inject(MatDialogRef<TextFormDialogComponent, string>);
-  readonly control = new FormControl(this.data.value ?? '', {
-    nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(this.data.maxLength ?? 60)],
+  readonly form = new FormGroup({
+    value: new FormControl(this.data.value ?? '', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(this.data.maxLength ?? 60)],
+    }),
   });
 
   save(): void {
-    if (this.control.invalid) {
-      this.control.markAsTouched();
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
-    this.ref.close(this.control.value.trim());
+    this.ref.close(this.form.controls.value.value.trim());
   }
 }
