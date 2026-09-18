@@ -77,7 +77,8 @@ export class FamiliesService {
       return null;
     }
     await this.reload();
-    return this.familiesState().find((f) => f.name === name.trim()) ?? null;
+    const creadas = this.familiesState().filter((f) => f.name === name.trim());
+    return creadas[creadas.length - 1] ?? null;
   }
 
   async rename(familyId: string, name: string): Promise<boolean> {
