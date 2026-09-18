@@ -51,6 +51,8 @@ export class ListsService {
   private readonly loadingState = signal(false);
   private channel: RealtimeChannel | null = null;
   private reloadTimer: ReturnType<typeof setTimeout> | null = null;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private lastReloadAt = 0;
   private inFlight = 0;
 
   readonly lists = this.listsState.asReadonly();
@@ -82,6 +84,20 @@ export class ListsService {
         this.subscribe(userId);
       });
     });
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.refreshIfStale();
+      });
+      window.addEventListener('focus', () => this.refreshIfStale());
+    }
+  }
+
+  /** Vuelve a leer las listas si pasaron mas de 20 s desde la ultima lectura. */
+  refreshIfStale(): void {
+    if (!this.auth.userId() || this.inFlight > 0) return;
+    if (Date.now() - this.lastReloadAt < 20_000) return;
+    void this.reload();
   }
 
   get(listId: string): ShoppingList | undefined {
@@ -103,6 +119,7 @@ export class ListsService {
       this.notify.error(this.i18n.t('data.loadError'));
       return;
     }
+    this.lastReloadAt = Date.now();
     this.listsState.set((data as ShoppingListRow[]).map((row) => this.toList(row, userId)));
   }
 
@@ -329,12 +346,28 @@ export class ListsService {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'list_items' }, () => this.scheduleReload())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'shopping_lists' }, () => this.scheduleReload())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'list_members' }, () => this.scheduleReload())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') this.stopPolling();
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') this.startPolling();
+      });
+  }
+
+  /** Respaldo cuando el canal en vivo no conecta: relee cada minuto. */
+  private startPolling(): void {
+    if (this.pollTimer) return;
+    this.pollTimer = setInterval(() => this.refreshIfStale(), 60_000);
+  }
+
+  private stopPolling(): void {
+    if (!this.pollTimer) return;
+    clearInterval(this.pollTimer);
+    this.pollTimer = null;
   }
 
   private unsubscribe(): void {
     if (this.reloadTimer) clearTimeout(this.reloadTimer);
     this.reloadTimer = null;
+    this.stopPolling();
     if (!this.channel) return;
     void this.supabase.client.removeChannel(this.channel);
     this.channel = null;
