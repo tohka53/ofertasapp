@@ -2,6 +2,8 @@
 
 Buscador y comparador de precios entre supermercados de Guatemala, Centroamérica y Estados Unidos, con listas de compras mensuales, en español e inglés.
 
+**En producción:** https://ofertasgtapp.vercel.app
+
 > **Cuentas reales y datos guardados.** El acceso es con correo y contraseña sobre **Supabase Auth** (confirmación por correo activada) y las listas, los grupos familiares y las preferencias viven en **Postgres** con seguridad a nivel de fila. Una lista se borra sola tres meses después del mes al que pertenece.
 
 - **Frontend:** Angular 22 con NgModules (`standalone: false` en componentes, directivas y pipes), Angular Material, formularios reactivos y diseño adaptable.
@@ -18,7 +20,7 @@ Buscador y comparador de precios entre supermercados de Guatemala, Centroaméric
 | Cuentas, listas compartidas y grupos familiares | **Conectados** a Supabase (`ofertasgt`): registro con correo y contraseña, invitaciones por correo con enlace, grupo familiar administrado por quien invita y borrado automático de listas con más de tres meses. |
 | Despliegue | **Vercel:** Angular estático + el API Express como función serverless en `/api`. |
 | Español e inglés | Selector de idioma en el acceso, en la barra superior y en Perfil; cambia al instante sin recargar ni perder la sesión. |
-| Servidor Node consultando las tiendas en vivo | **Pendiente de comprobar en tu red** (ver [Verificación](#verificación)). |
+| Servidor Node consultando las tiendas en vivo | **Comprobado en producción** el 18/09/2026: desde Vercel, `GET /api/search?country=GT&q=leche delactomy&stores=walmart-gt,maxi-despensa-gt,la-torre-gt&postalCode=01001` devolvió las tres tiendas en estado `ok` y 21 ofertas reales (Walmart, Delactomy 946 ml, Q 18.90). |
 
 Mecanismos, normalización, promociones y evidencia por tienda: [docs/INTEGRACIONES.md](docs/INTEGRACIONES.md).
 
@@ -126,11 +128,12 @@ El repositorio se despliega tal cual, sin variables de entorno obligatorias:
 | Build Command | `npm run build` (ya definido en `vercel.json`) |
 | Output Directory | `comparahorro/dist/comparahorro/browser` |
 | Install Command | `npm install` |
+| Proyecto | `ofertasgtapp` · https://ofertasgtapp.vercel.app |
 
 - `api/[...path].js` publica el servidor Express como una sola función serverless: toda petición a `/api/...` la atiende el mismo código que en local.
 - `vercel.json` reescribe cualquier otra ruta a `index.html` para que funcionen las rutas de Angular (`/listas/:id`, `/invitacion/:token`, `/auth/nueva-clave`).
 - Variables opcionales del servidor (`KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`, `STORE_TIMEOUT_MS`…) se configuran en *Settings → Environment Variables*.
-- Después del primer despliegue, copia la dirección del sitio a la configuración de URLs de Supabase (paso 3 de la sección anterior).
+- Después del primer despliegue, copia la dirección del sitio a la configuración de URLs de Supabase (paso 3 de la sección anterior). Ya configurado: `Site URL` = `https://ofertasgtapp.vercel.app`, `Redirect URLs` = `https://ofertasgtapp.vercel.app/**` y `http://localhost:4200/**`.
 
 ## Scripts
 
@@ -149,7 +152,13 @@ El repositorio se despliega tal cual, sin variables de entorno obligatorias:
 - **Angular (39 pruebas):** comparación, filtros y formato en ambos idiomas, presentaciones, promociones, ubicaciones, precios anotados, cálculos de listas en centavos, actualización de precios, sesión y un control que exige las mismas claves y parámetros en español e inglés.
 - **E2E (14 pruebas):** acceso con las tres cuentas, flujo completo (país, tiendas, búsqueda, comparación, lista mensual, perfil), cambio de idioma sin perder la sesión, EE. UU. por estado, enlace de PriceSmart con precio anotado, fallo de una tienda, cancelación de búsquedas, recarga y navegación móvil sin desplazamiento horizontal. Usan `e2e/mock-stores.mjs`, que sirve respuestas reales capturadas (las tiendas sin captura responden como sin conexión) y solo se activa con `ALLOW_TEST_STORE_BASE_URLS=1`. La primera vez instala Chromium: `cd e2e && npm install && npx playwright install chromium`.
 
-Resultados de esta entrega (16/09/2026):
+Comprobado en producción (18/09/2026, https://ofertasgtapp.vercel.app):
+
+- `GET /api/health` responde 200 desde la función serverless.
+- `GET /api/search` con las tres tiendas de Guatemala y código postal 01001: las tres en estado `ok` y 21 ofertas reales, con la Delactomy de 946 ml a Q 18.90 en Walmart. **Esto cierra el bloqueo de red documentado abajo:** desde Vercel el servidor Node sí alcanza los sitios de las tiendas.
+- Base de datos: 27 políticas RLS activas, la tarea `purgar-listas-vencidas` programada (`0 7 * * *`) y cuatro tablas publicadas en `supabase_realtime`. Con la clave publicable y sin sesión, las siete tablas devuelven `[]`: RLS no filtra datos a quien no tiene sesión.
+
+Resultados de la entrega anterior (16/09/2026):
 
 - Compilación, pruebas del servidor (71/71) y de Angular (39/39) y E2E 14/14 con Chromium comprobados en Linux x64 con Node 24.
 - Comparación en vivo del EAN 7441001698644 con código postal 01001, procesada con el código de la app: **Maxi Despensa Q 18.50 · Walmart Q 18.90 · La Torre Q 20.65**. La app agrupó el producto por código de barras y advirtió que las tiendas publican contenidos distintos (946 ml y 1 L). Detalle en `docs/INTEGRACIONES.md`.
