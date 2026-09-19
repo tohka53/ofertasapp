@@ -160,7 +160,10 @@
                 @if (offer.source === 'manual') {
                   <span class="ca-row"><app-status-tag [label]="'detail.manualTag' | t" tone="warn" icon="edit_note" /></span>
                 }
-                <span class="ca-small ca-muted">{{ offer | presentation | orNA }} · {{ offer.brand | orNA }}</span>
+                @let presentacion = offer | presentation;
+                @if (presentacion || offer.brand) {
+                  <span class="ca-small ca-muted">{{ presentacion || ('common.notSpecified' | t) }}{{ offer.brand ? ' · ' + offer.brand : '' }}</span>
+                }
                 @if (members().length > 1) {
                   <span class="assignee">
                     <mat-icon aria-hidden="true">{{ item.assignedTo ? 'assignment_ind' : 'person_search' }}</mat-icon>
@@ -178,7 +181,13 @@
                     </mat-menu>
                   </span>
                 }
-                <span class="ca-small">{{ 'detail.packagePrice' | t: { price: (offer.price | money: offer.currency), unit: (offer.unitPrice | unitPrice: offer.currency) } }}</span>
+                <span class="ca-small">
+                  @if (offer.unitPrice) {
+                    {{ 'detail.packagePrice' | t: { price: (offer.price | money: offer.currency), unit: (offer.unitPrice | unitPrice: offer.currency) } }}
+                  } @else {
+                    {{ 'detail.packagePriceOnly' | t: { price: (offer.price | money: offer.currency) } }}
+                  }
+                </span>
                 @if (offer.promotions.length) {
                   <app-promotion-list [promotions]="offer.promotions" [currency]="offer.currency" [storeName]="offer.storeName" />
                 }
@@ -211,9 +220,10 @@
                 }
                 @if (editable()) {
                   <div class="item-actions">
-                    <button mat-button type="button" (click)="offer.source === 'manual' ? notePrice(item) : findBestPrices([item.id])">
-                      {{ (offer.source === 'manual' ? 'detail.notePrice' : 'detail.changeOffer') | t }}
-                    </button>
+                    @if (offer.source !== 'manual') {
+                      <button mat-button type="button" (click)="findBestPrices([item.id])">{{ 'detail.changeOffer' | t }}</button>
+                    }
+                    <button mat-button type="button" (click)="notePrice(item)">{{ 'detail.notePrice' | t }}</button>
                     <button mat-icon-button type="button" (click)="removeItem(item)" [attr.aria-label]="'detail.removeItem' | t"><mat-icon>delete</mat-icon></button>
                   </div>
                 }

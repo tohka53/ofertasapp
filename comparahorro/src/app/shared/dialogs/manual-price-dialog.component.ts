@@ -8,6 +8,7 @@ import type { StoreSummary } from '../../core/models/api.models';
 import type { ManualPriceInput } from '../../core/models/app.models';
 import { CatalogService } from '../../core/services/catalog.service';
 import { defaultListName, ListsService } from '../../core/services/lists.service';
+import { NotifyService } from '../../core/services/notify.service';
 import { PreferencesService } from '../../core/services/preferences.service';
 import { storeLink } from '../components/link-stores.component';
 import { NEW_LIST } from './add-to-list-dialog.component';
@@ -155,6 +156,7 @@ export class ManualPriceDialogComponent {
   private readonly preferences = inject(PreferencesService);
   private readonly catalog = inject(CatalogService);
   private readonly i18n = inject(I18nService);
+  private readonly notify = inject(NotifyService);
 
   readonly months = MONTHS;
   readonly newListValue = NEW_LIST;
@@ -209,13 +211,23 @@ export class ManualPriceDialogComponent {
     const value = this.form.getRawValue();
     const store = this.stores().find((s) => s.id === value.storeId);
     const price = Number(value.price);
-    if (!store || !Number.isFinite(price) || price <= 0) return;
+    if (!store) {
+      this.notify.error(this.i18n.t('manual.noStore'));
+      return;
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      this.notify.error(this.i18n.t('manual.priceError'));
+      return;
+    }
 
     let listId = this.data.listId ?? value.listId;
     let listName = this.listsService.get(listId)?.name ?? '';
     if (!this.data.listId && listId === NEW_LIST) {
       const country = this.preferences.country();
-      if (!country) return;
+      if (!country) {
+        this.notify.error(this.i18n.t('data.loadError'));
+        return;
+      }
       const list = this.listsService.create({ name: value.newName, month: value.newMonth, year: value.newYear }, country);
       listId = list.id;
       listName = list.name;

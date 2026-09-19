@@ -725,6 +725,9 @@ export const ES = {
   'detail.assignUnknown': 'Otro integrante',
   'detail.assignAria': 'Responsable de comprar {name}',
   'detail.assignedToMe': 'Te tocan {count, plural, one {# producto} other {# productos}}',
+
+  'detail.packagePriceOnly': 'Precio por paquete: {price}',
+  'manual.noStore': 'Elige la tienda donde viste el precio.',
 };
 
 export type MessageKey = keyof typeof ES;

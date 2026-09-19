@@ -727,4 +727,7 @@ export const EN: Record<MessageKey, string> = {
   'detail.assignUnknown': 'Another member',
   'detail.assignAria': 'Who buys {name}',
   'detail.assignedToMe': 'You are in charge of {count, plural, one {# product} other {# products}}',
+
+  'detail.packagePriceOnly': 'Package price: {price}',
+  'manual.noStore': 'Pick the store where you saw the price.',
 };
